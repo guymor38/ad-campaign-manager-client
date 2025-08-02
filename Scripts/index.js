@@ -1,1 +1,6 @@
-console.log("a test to check the js file' and its working Adi :)");
+import { initDefaultUser } from "./storage.js";
+import { renderLogin } from "./login.js";
+
+initDefaultUser(); // Initialize default user if none exists
+
+renderLogin(); // Initialize default user if none exists

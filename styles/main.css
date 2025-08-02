@@ -1,6 +1,21 @@
-/* A test to check the conections */
-h1 {
-  color: blue;
-  font-size: 24px;
+/* === RESET כללי === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* === טיפוגרפיה === */
+body {
+  font-family: 'Verdana', sans-serif;
+  background-color: #f7f7f7;
+  color: #333;
+}
+
+/* === Header & Footer (לדוגמה) === */
+header, footer {
+  padding: 20px;
+  background-color: #5a4872;
+  color: white;
   text-align: center;
 }
