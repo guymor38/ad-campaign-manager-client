@@ -1,21 +1,42 @@
+body {
+  background-color: #645774; /* סגול כהה */
+  margin: 0;
+  font-family: "Suez One", serif;
+}
+
 .login-container {
   text-align: center;
   padding: 40px;
 }
 
+
 .login-form input,
 .login-form button {
   display: block;
-  margin: 10px auto;
-  padding: 12px 20px;
-  border-radius: 10px;
-  border: none;
-  width: 250px;
+  margin: 15px auto;
+  padding: 15px 20px;
+  border-radius: 15px;
+  border: 2px solid #645774;
+  width: 280px;
+  background-color: #ffffff;
+  font-weight: bold;
+  font-size: 18px;
+  color: #80b9b1; /* תכלת כהה */
+  text-align: center;
+  box-shadow: 2px 2px 4px #645774;
 }
 
 .login-form button {
-  background-color: #5a4872;
+  background-color: #80b9b1; /* תכלת */
   color: white;
   font-weight: bold;
+  font-size: 18px;
   cursor: pointer;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  width: 200px;
+  margin-top: 25px;
+  box-shadow: 2px 2px 4px #645774;
 }
+
