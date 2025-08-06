@@ -11,9 +11,11 @@ export function renderRegister() {
   const container = document.createElement("div");
   container.className = "register-container";
 
-  const logo = document.createElement("h1");
+  const logo = document.createElement("img");
+  logo.src = "./Assets/img/BanneriestLogo.svg";
+  logo.alt = "Bannerist Logo";
   logo.className = "logo";
-  logo.textContent = "Bannerist";
+  
 
   const form = document.createElement("form");
   form.className = "register-form";
