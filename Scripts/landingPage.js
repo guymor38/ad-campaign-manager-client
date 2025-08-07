@@ -3,7 +3,8 @@ import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
-import { renderLandingPage } from "./landingPage.js";
+import { renderBannerEditor } from "./bannerEditor.js";
+
 
 export function renderLandingPage(username) {
   loadStyle("./styles/landingPage.css");

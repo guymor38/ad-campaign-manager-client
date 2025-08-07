@@ -2,8 +2,6 @@ import { loadStyle } from "./utils.js";
 import { renderRegister } from "./register.js";
 import { findUser } from "./storage.js";
 import { renderDashboard } from "./dashboard.js";
-import { renderDashboard } from "./dashboard.js";
-import { renderLogin } from "./login.js";
 
 export function renderLogin() {
   loadStyle("./styles/main.css");
