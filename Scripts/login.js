@@ -2,7 +2,7 @@ import { loadStyle } from "./utils.js";
 import { renderRegister } from "./register.js";
 import { findUser } from "./storage.js";
 import { renderDashboard } from "./dashboard.js";
-
+import { setLoggedInUser } from "./storage.js";
 
 export function renderLogin() {
   loadStyle("./styles/main.css");
@@ -53,6 +53,9 @@ export function renderLogin() {
       message.textContent = "Incorrect password.";
       return;
     }
+
+    setLoggedInUser(username); 
+    renderDashboard(username);
 
     renderDashboard(username);
   });

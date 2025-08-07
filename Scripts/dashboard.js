@@ -4,6 +4,7 @@ import { renderHeader } from "./header.js";
 import { renderBannerEditor } from "./bannerEditor.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
+import { clearLoggedInUser } from "./storage.js";
 
 export function renderDashboard(username) {
   loadStyle("./styles/main.css");
@@ -31,7 +32,10 @@ export function renderDashboard(username) {
           console.warn("Unknown page:", key);
       }
     },
-    () => renderLogin()
+    () => {
+      clearLoggedInUser();
+      renderLogin();
+    }
   );
 
   const container = document.createElement("div");
