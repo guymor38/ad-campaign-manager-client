@@ -3,8 +3,7 @@ import { renderLogin } from "./login.js";
 import { getUsers, saveUser, findUser } from "./storage.js";
 
 export function renderRegister() {
-  loadStyle("./Styles/register.css");
-
+  loadStyle("./styles/main.css");
   const app = document.getElementById("app");
   app.innerHTML = "";
 
@@ -15,7 +14,6 @@ export function renderRegister() {
   logo.src = "./Assets/img/BanneriestLogo.svg";
   logo.alt = "Bannerist Logo";
   logo.className = "logo";
-  
 
   const form = document.createElement("form");
   form.className = "register-form";

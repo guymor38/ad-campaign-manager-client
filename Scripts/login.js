@@ -1,9 +1,12 @@
 import { loadStyle } from "./utils.js";
 import { renderRegister } from "./register.js";
 import { findUser } from "./storage.js";
+import { renderDashboard } from "./dashboard.js";
+import { renderDashboard } from "./dashboard.js";
+import { renderLogin } from "./login.js";
 
 export function renderLogin() {
-  loadStyle("./Styles/login.css");
+  loadStyle("./styles/main.css");
 
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -15,7 +18,6 @@ export function renderLogin() {
   logo.src = "./Assets/img/BanneriestLogo.svg";
   logo.alt = "Bannerist Logo";
   logo.className = "logo";
-  
 
   const form = document.createElement("form");
   form.className = "login-form";
@@ -53,7 +55,7 @@ export function renderLogin() {
       return;
     }
 
-    message.textContent = "Login successful!";
+    renderDashboard(username);
   });
 
   const switchToRegister = document.createElement("p");

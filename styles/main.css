@@ -1,21 +1,5 @@
-/* === RESET כללי === */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* === טיפוגרפיה === */
-body {
-  background-color: #645774; /* סגול כהה */
-  margin: 0;
-  font-family: "Suez One", serif;
-}
-
-/* === Header & Footer (לדוגמה) === */
-header, footer {
-  padding: 20px;
-  background-color: #645774;
-  color: white;
-  text-align: center;
-}
+/* Main styles for the application */
+@import url("./login.css");
+@import url("./reset.css");
+@import url("./register.css");
+@import url("./dashboard.css");
