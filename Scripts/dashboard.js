@@ -33,8 +33,8 @@ export function renderDashboard(username) {
       }
     },
     () => {
-      clearLoggedInUser();
-      renderLogin();
+      clearLoggedInUser();  // ✅ מוחק את המשתמש
+      renderLogin();        // ✅ מחזיר לעמוד ההתחברות
     }
   );
 
