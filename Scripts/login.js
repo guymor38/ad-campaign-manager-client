@@ -3,6 +3,7 @@ import { renderRegister } from "./register.js";
 import { findUser } from "./storage.js";
 import { renderDashboard } from "./dashboard.js";
 
+
 export function renderLogin() {
   loadStyle("./styles/main.css");
 

@@ -33,10 +33,6 @@ export function findUser(username) {
   return users.find((u) => u.username === username);
 }
 
-// Clear all users from localStorage
-export function clearAllUsers() {
-  localStorage.removeItem("users");
-}
 // Delete a user by username
 export function deleteUser(username) {
   const users = getUsers();
@@ -49,4 +45,21 @@ export function deleteUser(username) {
   }
 
   localStorage.setItem("users", JSON.stringify(filtered));
+
+  
+}
+
+// Get the currently logged-in user from localStorage
+export function setLoggedInUser(username) {
+  localStorage.setItem("loggedInUser", username);
+}
+
+// Retrieve the currently logged-in user from localStorage
+export function getLoggedInUser() {
+  return localStorage.getItem("loggedInUser");
+}
+
+// Clear the currently logged-in user from localStorage
+export function clearLoggedInUser() {
+  localStorage.removeItem("loggedInUser");
 }
