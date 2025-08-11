@@ -1,0 +1,80 @@
+/* ===== Dashboard Layout ===== */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #80b9b1;
+
+  display: grid;
+  grid-template-columns: 1fr; /* עמודה אחת ל-Overview + רשת הבאנרים */
+  gap: 20px;
+}
+
+/* כרטיס/פאנל כללי */
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* כותרת ראשית */
+.dashboard-card h1 {
+  margin: 0 0 8px;
+  font-size: clamp(1.6rem, 2vw, 2rem);
+  color: #80b9b1;
+}
+
+/* טקסט כללי */
+.dashboard-card p {
+  margin: 0 0 12px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+/* כפתור פעולה כללי בדשבורד */
+.dashboard-card button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #80b9b1; /* תכלת-ירקרק */
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px #645774;
+  transition: filter 0.15s ease-in-out;
+}
+.dashboard-card button:hover {
+  filter: brightness(0.95);
+}
+
+/* ===== רשת תצוגות הבאנרים (אם מציגים כרטיסים) ===== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* רספונסיבי */
+  gap: 20px;
+}
+
+/* מסגרת תצוגת באנר */
+.dashboard-banner-frame {
+  margin: 10px 0 12px;
+  border: 2px dashed #645774;
+  border-radius: 10px;
+  display: block;
+  overflow: hidden;
+  background: #fff; /* ברירת מחדל; ניתן לדרוס דינמית ב-JS */
+}
+
+/* כותרת כרטיס באנר */
+.dashboard-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  color: #80b9b1;
+}
+
+/* התאמות קטנות למסכים צרים */
+@media (max-width: 700px) {
+  .dashboard-card button {
+    width: 100%;
+  }
+}

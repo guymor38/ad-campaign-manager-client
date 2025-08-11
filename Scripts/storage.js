@@ -45,8 +45,6 @@ export function deleteUser(username) {
   }
 
   localStorage.setItem("users", JSON.stringify(filtered));
-
-  
 }
 
 // Get the currently logged-in user from localStorage
@@ -62,4 +60,80 @@ export function getLoggedInUser() {
 // Clear the currently logged-in user from localStorage
 export function clearLoggedInUser() {
   localStorage.removeItem("loggedInUser");
+}
+
+// ===== BANNERS STORAGE =====
+const BANNERS_KEY = "banners";
+
+export function getBanners() {
+  const raw = localStorage.getItem(BANNERS_KEY);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+export function saveBanner(size, data) {
+  const all = getBanners();
+  all[size] = { ...data, updatedAt: Date.now() };
+  localStorage.setItem(BANNERS_KEY, JSON.stringify(all));
+}
+
+export function getBanner(size) {
+  const all = getBanners();
+  return all[size] || null;
+}
+
+export function clearBanners() {
+  localStorage.removeItem(BANNERS_KEY);
+}
+
+// === MARKETING (email) ===
+const MARKETING_KEY = "marketingPage";
+
+export function getMarketingPage() {
+  const raw = localStorage.getItem(MARKETING_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function saveMarketingPage(data) {
+  localStorage.setItem(
+    MARKETING_KEY,
+    JSON.stringify({ ...data, updatedAt: Date.now() })
+  );
+}
+
+export function clearMarketingPage() {
+  localStorage.removeItem(MARKETING_KEY);
+}
+
+// === LANDING PAGE ===
+const LANDING_KEY = "landingPage";
+
+export function getLandingPage() {
+  const raw = localStorage.getItem(LANDING_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function saveLandingPage(data) {
+  localStorage.setItem(
+    LANDING_KEY,
+    JSON.stringify({ ...data, updatedAt: Date.now() })
+  );
+}
+
+export function clearLandingPage() {
+  localStorage.removeItem(LANDING_KEY);
 }

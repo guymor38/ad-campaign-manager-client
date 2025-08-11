@@ -1,8 +1,7 @@
 import { loadStyle } from "./utils.js";
 import { renderRegister } from "./register.js";
-import { findUser } from "./storage.js";
+import { findUser, setLoggedInUser } from "./storage.js";
 import { renderDashboard } from "./dashboard.js";
-import { setLoggedInUser } from "./storage.js";
 
 export function renderLogin() {
   loadStyle("./styles/main.css");
@@ -36,6 +35,7 @@ export function renderLogin() {
   submitBtn.textContent = "Login";
 
   const message = document.createElement("p");
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
@@ -48,16 +48,13 @@ export function renderLogin() {
       message.textContent = "User does not exist.";
       return;
     }
-
     if (existingUser.password !== password) {
       message.textContent = "Incorrect password.";
       return;
     }
 
-    setLoggedInUser(username); 
-    renderDashboard(username);
-
-    renderDashboard(username);
+    setLoggedInUser(username);
+    renderDashboard(username); 
   });
 
   const switchToRegister = document.createElement("p");

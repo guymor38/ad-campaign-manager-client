@@ -1,3 +1,128 @@
 .marketing-container {
-  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #80b9b1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+}
+
+.marketing-templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.marketing-editor {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+@media (max-width: 800px) {
+  .marketing-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+.marketing-editor .field {
+  display: flex;
+  flex-direction: column;
+}
+.marketing-editor label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.marketing-editor input,
+.marketing-editor textarea,
+.marketing-editor select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid #645774;
+  background: #fff;
+  color: #80b9b1;
+}
+.marketing-editor textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.marketing-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #80b9b1;
+
+  display: grid;
+  grid-template-columns: 1fr 650px; /* שמאל טופס | ימין קנבס מייל */
+  gap: 20px;
+}
+@media (max-width: 1000px) {
+  .marketing-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* פנלים */
+.panel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* טופס */
+.marketing-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+@media (max-width: 700px) {
+  .marketing-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+.field label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.marketing-editor input,
+.marketing-editor textarea,
+.marketing-editor select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid #645774;
+  background: #fff;
+  color: #80b9b1;
+}
+.marketing-editor textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* קנבס המייל – 650px קבוע */
+.email-canvas {
+  width: 650px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+  color: #333;
 }

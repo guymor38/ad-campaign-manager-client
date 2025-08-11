@@ -19,9 +19,7 @@ export function renderHeader(username, onNavigate, onLogout) {
     const btn = document.createElement("button");
     btn.textContent = label;
     btn.dataset.key = key;
-    btn.addEventListener("click", () => {
-      onNavigate(key); // מפעיל את ה־switch בקובץ dashboard.js
-    });
+    btn.addEventListener("click", () => onNavigate(key));
     nav.appendChild(btn);
   });
 
@@ -30,9 +28,7 @@ export function renderHeader(username, onNavigate, onLogout) {
 
   const logoutBtn = document.createElement("button");
   logoutBtn.textContent = "Logout";
-  logoutBtn.addEventListener("click", () => {
-    onLogout(); // ⬅️ רק מפעיל את הפונקציה שהועברה מ־dashboard
-  });
+  logoutBtn.addEventListener("click", () => onLogout());
 
   nav.append(welcome, logoutBtn);
   header.append(logo, nav);
