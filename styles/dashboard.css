@@ -16,6 +16,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 16px;
+  position: relative; /* מאפשר למקם את כפתור ה-X */
 }
 
 /* כותרת ראשית */
@@ -43,9 +44,32 @@
   cursor: pointer;
   box-shadow: 2px 2px 4px #645774;
   transition: filter 0.15s ease-in-out;
+  margin: 6px 6px 0 0;
 }
 .dashboard-card button:hover {
   filter: brightness(0.95);
+}
+
+/* כפתורי פעולה ייחודיים */
+.btn-go-live {
+  background: #4caf50; /* ירוק */
+}
+.btn-go-live:hover {
+  filter: brightness(0.9);
+}
+
+.btn-reset {
+  background: #ff9800; /* כתום */
+}
+.btn-reset:hover {
+  filter: brightness(0.9);
+}
+
+.btn-unpublish {
+  background: #f44336; /* אדום */
+}
+.btn-unpublish:hover {
+  filter: brightness(0.9);
 }
 
 /* ===== רשת תצוגות הבאנרים (אם מציגים כרטיסים) ===== */
@@ -70,6 +94,28 @@
   margin: 0 0 8px;
   font-size: 1.1rem;
   color: #80b9b1;
+}
+
+/* כפתור X קטן למחיקת קמפיין */
+.delete-campaign-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #f44336; /* אדום */
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 22px;
+  text-align: center;
+  cursor: pointer;
+  transition: filter 0.15s ease-in-out;
+}
+.delete-campaign-btn:hover {
+  filter: brightness(0.9);
 }
 
 /* התאמות קטנות למסכים צרים */

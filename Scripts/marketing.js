@@ -8,6 +8,7 @@ import {
   clearLoggedInUser,
   getMarketingPage,
   saveMarketingPage,
+  clearMarketingPage,
 } from "./storage.js";
 
 export function renderMarketingPage(username) {
@@ -18,36 +19,27 @@ export function renderMarketingPage(username) {
 
   const header = renderHeader(
     username,
-    (key) => {
-      switch (key) {
-        case "dashboard":
-          renderDashboard(username);
-          break;
-        case "banners":
-          renderBannerEditor(username);
-          break;
-        case "marketing":
-          renderMarketingPage(username);
-          break;
-        case "landing":
-          renderLandingPage(username);
-          break;
-        default:
-          console.warn("Unknown page:", key);
+    function (key) {
+      if (key === "dashboard") {
+        renderDashboard(username);
+      } else if (key === "banners") {
+        renderBannerEditor(username);
+      } else if (key === "marketing") {
+        renderMarketingPage(username);
+      } else if (key === "landing") {
+        renderLandingPage(username);
       }
     },
-    () => {
+    function () {
       clearLoggedInUser();
       renderLogin();
     }
   );
   app.appendChild(header);
 
-  // קונטיינר עם גריד (יש לך marketing.css שמגדיר grid)
   const container = document.createElement("div");
   container.className = "marketing-container";
 
-  // שמאל: טופס בקרה
   const controls = document.createElement("div");
   controls.className = "panel";
   controls.innerHTML = `
@@ -55,8 +47,7 @@ export function renderMarketingPage(username) {
     <p style="opacity:.85;margin:6px 0 12px">רוחב קבוע 650px · שמירה אוטומטית</p>
 
     <div class="marketing-editor">
-      <div class="field">
-        <label>Template</label>
+      <div class="field"><label>Template</label>
         <select id="tpl">
           <option value="t1">Template 1 – Clean</option>
           <option value="t2">Template 2 – Hero</option>
@@ -64,53 +55,16 @@ export function renderMarketingPage(username) {
         </select>
       </div>
 
-      <div class="field">
-        <label>Title</label>
-        <input id="title" placeholder="Main headline"/>
-      </div>
-
-      <div class="field">
-        <label>Subtitle</label>
-        <input id="subtitle" placeholder="Sub headline"/>
-      </div>
-
-      <div class="field">
-        <label>Body</label>
-        <textarea id="body" placeholder="Email body..."></textarea>
-      </div>
-
-      <div class="field">
-        <label>Image URL</label>
-        <input id="imgUrl" placeholder="https://..."/>
-      </div>
-
-      <div class="field">
-        <label>Button text</label>
-        <input id="ctaText" placeholder="Shop now"/>
-      </div>
-
-      <div class="field">
-        <label>Button URL</label>
-        <input id="ctaUrl" placeholder="https://example.com"/>
-      </div>
-
-      <div class="field">
-        <label>Background</label>
-        <input id="bg" type="color" value="#ffffff"/>
-      </div>
-
-      <div class="field">
-        <label>Text color</label>
-        <input id="color" type="color" value="#333333"/>
-      </div>
-
-      <div class="field">
-        <label>Accent color (button)</label>
-        <input id="accent" type="color" value="#2d89ef"/>
-      </div>
-
-      <div class="field">
-        <label>Font family</label>
+      <div class="field"><label>Title</label><input id="title" placeholder="Main headline"/></div>
+      <div class="field"><label>Subtitle</label><input id="subtitle" placeholder="Sub headline"/></div>
+      <div class="field"><label>Body</label><textarea id="body" placeholder="Email body..."></textarea></div>
+      <div class="field"><label>Image URL</label><input id="imgUrl" placeholder="https://..."/></div>
+      <div class="field"><label>Button text</label><input id="ctaText" placeholder="Shop now"/></div>
+      <div class="field"><label>Button URL</label><input id="ctaUrl" placeholder="https://example.com"/></div>
+      <div class="field"><label>Background</label><input id="bg" type="color" value="#ffffff"/></div>
+      <div class="field"><label>Text color</label><input id="color" type="color" value="#333333"/></div>
+      <div class="field"><label>Accent color (button)</label><input id="accent" type="color" value="#2d89ef"/></div>
+      <div class="field"><label>Font family</label>
         <select id="font">
           <option value="system-ui, -apple-system, Segoe UI, Roboto">System</option>
           <option value="Georgia, serif">Serif</option>
@@ -119,9 +73,15 @@ export function renderMarketingPage(username) {
         </select>
       </div>
     </div>
+
+    <div class="actions" style="margin-top:12px">
+      <button id="go-live" type="button">Go live</button>
+      <button id="unpublish" type="button">Unpublish</button>
+      <button id="reset" type="button">Reset</button>
+      <button id="delete" type="button" class="danger">Delete</button>
+    </div>
   `;
 
-  // ימין: קנבס מייל ברוחב 650px
   const preview = document.createElement("div");
   preview.className = "panel";
   preview.innerHTML = `
@@ -132,7 +92,6 @@ export function renderMarketingPage(username) {
   container.append(controls, preview);
   app.appendChild(container);
 
-  // ===== שליפת מצב שמור/ברירת מחדל =====
   const DEF = {
     tpl: "t1",
     title: "Your great headline",
@@ -146,9 +105,9 @@ export function renderMarketingPage(username) {
     accent: "#2d89ef",
     font: "system-ui, -apple-system, Segoe UI, Roboto",
   };
+
   const state = Object.assign({}, DEF, getMarketingPage() || {});
 
-  // קישורים לשדות
   const els = {
     tpl: controls.querySelector("#tpl"),
     title: controls.querySelector("#title"),
@@ -162,73 +121,104 @@ export function renderMarketingPage(username) {
     accent: controls.querySelector("#accent"),
     font: controls.querySelector("#font"),
     email: preview.querySelector("#email"),
+
+    goLive: controls.querySelector("#go-live"),
+    unpublish: controls.querySelector("#unpublish"),
+    resetBtn: controls.querySelector("#reset"),
+    deleteBtn: controls.querySelector("#delete"),
   };
 
-  // הטענת ערכים לשדות
-  Object.entries(state).forEach(([k, v]) => {
-    if (els[k]) els[k].value = v;
+  Object.entries(state).forEach(function ([k, v]) {
+    if (els[k]) {
+      els[k].value = v;
+    }
   });
 
-  // רנדר של 3 התבניות (בתוך 650px)
   function renderTpl(s) {
-    const styleBase = `
-      background:${s.bg}; color:${s.color}; font-family:${s.font};
-      width:650px; margin:0 auto; line-height:1.5; 
-    `;
-
-    const btn = (text, url) => `
-      <a href="${url || "#"}" 
-         style="display:inline-block;padding:10px 16px;border-radius:8px;
-                text-decoration:none;background:${
-                  s.accent
-                };color:#fff;font-weight:600">
-        ${text || "Button"}
-      </a>`;
-
-    const img = s.imgUrl
-      ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
-      : "";
+    const base =
+      "background:" +
+      s.bg +
+      "; color:" +
+      s.color +
+      "; font-family:" +
+      s.font +
+      "; width:650px; margin:0 auto; line-height:1.5;";
+    const btn =
+      '<a href="' +
+      (s.ctaUrl ? s.ctaUrl : "#") +
+      '" style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;background:' +
+      s.accent +
+      ';color:#fff;font-weight:600">' +
+      (s.ctaText ? s.ctaText : "Button") +
+      "</a>";
+    let img = "";
+    if (s.imgUrl) {
+      img =
+        '<img src="' +
+        s.imgUrl +
+        '" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>';
+    }
 
     if (s.tpl === "t1") {
-      return `
-        <div style="${styleBase} padding:18px;">
-          <h1 style="margin:0 0 8px">${s.title}</h1>
-          <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle}</h3>
-          ${img}
-          <p style="margin:0 0 16px">${s.body}</p>
-          ${btn(s.ctaText, s.ctaUrl)}
-        </div>
-      `;
+      return (
+        '<div style="' +
+        base +
+        ' padding:18px;">' +
+        "<h1 style='margin:0 0 8px'>" +
+        s.title +
+        "</h1>" +
+        "<h3 style='margin:0 0 14px;opacity:.85'>" +
+        s.subtitle +
+        "</h3>" +
+        img +
+        "<p style='margin:0 0 16px'>" +
+        s.body +
+        "</p>" +
+        btn +
+        "</div>"
+      );
     }
+
     if (s.tpl === "t2") {
-      return `
-        <div style="${styleBase}">
-          <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
-            ${
-              img ||
-              `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
-            }
-          </div>
-          <div style="padding:18px;">
-            <h1 style="margin:0 0 8px">${s.title}</h1>
-            <p style="margin:0 0 16px">${s.body}</p>
-            ${btn(s.ctaText, s.ctaUrl)}
-          </div>
-        </div>
-      `;
+      return (
+        '<div style="' +
+        base +
+        '">' +
+        "<div style='padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;'>" +
+        (img ||
+          "<div style='height:180px;display:grid;place-items:center;color:#888'>Hero</div>") +
+        "</div>" +
+        "<div style='padding:18px;'>" +
+        "<h1 style='margin:0 0 8px'>" +
+        s.title +
+        "</h1>" +
+        "<p style='margin:0 0 16px'>" +
+        s.body +
+        "</p>" +
+        btn +
+        "</div></div>"
+      );
     }
+
     // t3 – Card
-    return `
-      <div style="${styleBase} padding:18px;">
-        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-          ${img}
-          <h2 style="margin:0 0 8px">${s.title}</h2>
-          <p style="margin:0 0 14px;opacity:.9">${s.subtitle}</p>
-          <p style="margin:0 0 16px">${s.body}</p>
-          ${btn(s.ctaText, s.ctaUrl)}
-        </div>
-      </div>
-    `;
+    return (
+      '<div style="' +
+      base +
+      ' padding:18px;">' +
+      "<div style='background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)'>" +
+      (img || "") +
+      "<h2 style='margin:0 0 8px'>" +
+      s.title +
+      "</h2>" +
+      "<p style='margin:0 0 14px;opacity:.9'>" +
+      s.subtitle +
+      "</p>" +
+      "<p style='margin:0 0 16px'>" +
+      s.body +
+      "</p>" +
+      btn +
+      "</div></div>"
+    );
   }
 
   function render() {
@@ -239,14 +229,44 @@ export function renderMarketingPage(username) {
     saveMarketingPage(state);
   }
 
-  // האזנות לכל שדה – עדכון state, רנדר ושמירה
-  Object.keys(state).forEach((k) => {
+  Object.keys(state).forEach(function (k) {
     if (!els[k]) return;
-    els[k].addEventListener("input", () => {
+    els[k].addEventListener("input", function () {
       state[k] = els[k].value;
       render();
       persist();
     });
+  });
+
+  // actions
+  els.goLive.addEventListener("click", function () {
+    const copy = { ...state };
+    copy.active = true;
+    saveMarketingPage(copy);
+  });
+
+  els.unpublish.addEventListener("click", function () {
+    const copy = { ...state };
+    copy.active = false;
+    saveMarketingPage(copy);
+  });
+
+  els.resetBtn.addEventListener("click", function () {
+    Object.keys(DEF).forEach(function (k) {
+      state[k] = DEF[k];
+      if (els[k]) els[k].value = DEF[k];
+    });
+    render();
+    saveMarketingPage(state);
+  });
+
+  els.deleteBtn.addEventListener("click", function () {
+    clearMarketingPage();
+    Object.keys(DEF).forEach(function (k) {
+      state[k] = DEF[k];
+      if (els[k]) els[k].value = DEF[k];
+    });
+    render();
   });
 
   render();

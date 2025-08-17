@@ -4,7 +4,14 @@ import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
-import { clearLoggedInUser, getBanner, saveBanner } from "./storage.js";
+import {
+  clearLoggedInUser,
+  getBanner,
+  saveBanner,
+  deleteBanner,
+  resetBanner,
+  setBannerActive,
+} from "./storage.js";
 
 export function renderBannerEditor(username) {
   loadStyle("./styles/main.css");
@@ -12,209 +19,246 @@ export function renderBannerEditor(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header + ניווט
   const header = renderHeader(
     username,
-    (key) => {
-      switch (key) {
-        case "dashboard": renderDashboard(username); break;
-        case "banners":   renderBannerEditor(username); break;
-        case "marketing": renderMarketingPage(username); break;
-        case "landing":   renderLandingPage(username); break;
-        default: console.warn("Unknown page:", key);
+    function (key) {
+      if (key === "dashboard") {
+        renderDashboard(username);
+      } else if (key === "banners") {
+        renderBannerEditor(username);
+      } else if (key === "marketing") {
+        renderMarketingPage(username);
+      } else if (key === "landing") {
+        renderLandingPage(username);
       }
     },
-    () => { clearLoggedInUser(); renderLogin(); }
+    function () {
+      clearLoggedInUser();
+      renderLogin();
+    }
   );
   app.appendChild(header);
 
-  // ========= layout =========
+  // Layout
   const container = document.createElement("div");
   container.className = "banner-editor-container";
 
-  // פנל בקרות (שמאל)
   const controls = document.createElement("div");
   controls.className = "panel controls";
-
   controls.innerHTML = `
     <h2>Banner Editor</h2>
-    <p style="margin:6px 0 14px;opacity:.9">בחר גודל→ערוך→התצוגה מימין תתעדכן בזמן אמת</p>
 
     <div class="field">
-      <label>Banner Size</label>
-      <select id="ctrl-size">
-        <option value="250x250">250×250 (Square)</option>
-        <option value="300x600">300×600 (Portrait)</option>
+      <label>Size</label>
+      <select id="size">
+        <option value="250x250">250×250</option>
+        <option value="300x600">300×600</option>
       </select>
-    </div>
-
-    <div class="field">
-      <label>Text</label>
-      <input id="ctrl-text" placeholder="Write your banner text..." />
-    </div>
-
-    <div class="field">
-      <label>Background Color</label>
-      <input id="ctrl-bg" type="color" value="#ffffff" />
-    </div>
-
-    <div class="field">
-      <label>Text Color</label>
-      <input id="ctrl-color" type="color" value="#333333" />
-    </div>
-
-    <div class="field">
-      <label>Font Size (px)</label>
-      <input id="ctrl-font" type="number" min="10" max="80" value="24" />
     </div>
 
     <div class="field">
       <label>Template</label>
-      <select id="ctrl-template">
-        <option value="t1">Template 1 – Centered</option>
-        <option value="t2">Template 2 – Badge</option>
-        <option value="t3">Template 3 – Ribbon</option>
+      <select id="template">
+        <option value="t1">Template 1 – Pop-up Sale</option>
+        <option value="t2">Template 2 – Dots Card</option>
+        <option value="t3">Template 3 – Real Estate</option>
       </select>
     </div>
 
-    <div style="margin-top:12px;opacity:.7;font-size:.9rem">
-      * נשמר אוטומטית ב-Local Storage בעת שינוי
+    <div class="field">
+      <label>Image URL</label>
+      <input id="imgUrl" placeholder="https://..." />
+    </div>
+
+    <div class="field">
+      <label>Headline</label>
+      <input id="title" placeholder="Main title" />
+    </div>
+
+    <div class="field">
+      <label>Subtitle / Date</label>
+      <input id="subtitle" placeholder="Subtitle or date" />
+    </div>
+
+    <div class="field">
+      <label>Body (short)</label>
+      <textarea id="body" placeholder="Short text..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Background</label>
+      <input id="bg" type="color" value="#E7C282" />
+    </div>
+
+    <div class="field">
+      <label>Text Color</label>
+      <input id="color" type="color" value="#2b2b2b" />
+    </div>
+
+    <div class="field">
+      <label>Font Size (px)</label>
+      <input id="fontSize" type="number" min="12" max="64" value="22" />
+    </div>
+
+    <div class="actions">
+      <button id="go-live" type="button">Go live</button>
+      <button id="unpublish" type="button">Unpublish</button>
+      <button id="reset-size" type="button">Reset current</button>
+      <button id="delete-size" type="button" class="danger">Delete current</button>
     </div>
   `;
 
-  // אזור תצוגה (ימין)
   const preview = document.createElement("div");
   preview.className = "panel preview";
   preview.innerHTML = `
-    <h3 style="margin-bottom:10px">Live Preview</h3>
-
-    <div class="banner-frame frame-250x250">
-      <div id="prev-250" class="banner-content">250×250</div>
-    </div>
-
-    <div class="banner-frame frame-300x600">
-      <div id="prev-300" class="banner-content">300×600</div>
+    <h3>Live Preview</h3>
+    <div class="banner-frames">
+      <div class="banner-frame frame-250x250">
+        <div id="prev-250" class="banner-content tpl"></div>
+      </div>
+      <div class="banner-frame frame-300x600">
+        <div id="prev-300" class="banner-content tpl"></div>
+      </div>
     </div>
   `;
 
   container.append(controls, preview);
   app.appendChild(container);
 
-  // ========= wiring =========
+  // Refs
   const els = {
-    size: controls.querySelector("#ctrl-size"),
-    text: controls.querySelector("#ctrl-text"),
-    bg: controls.querySelector("#ctrl-bg"),
-    color: controls.querySelector("#ctrl-color"),
-    font: controls.querySelector("#ctrl-font"),
-    template: controls.querySelector("#ctrl-template"),
+    size: controls.querySelector("#size"),
+    template: controls.querySelector("#template"),
+    imgUrl: controls.querySelector("#imgUrl"),
+    title: controls.querySelector("#title"),
+    subtitle: controls.querySelector("#subtitle"),
+    body: controls.querySelector("#body"),
+    bg: controls.querySelector("#bg"),
+    color: controls.querySelector("#color"),
+    fontSize: controls.querySelector("#fontSize"),
+
+    goLive: controls.querySelector("#go-live"),
+    unpublish: controls.querySelector("#unpublish"),
+    resetSize: controls.querySelector("#reset-size"),
+    deleteSize: controls.querySelector("#delete-size"),
+
     prev250: preview.querySelector("#prev-250"),
     prev300: preview.querySelector("#prev-300"),
   };
 
-  // החלת מצב שמור אם קיים
-  function loadStateFor(size) {
-    const saved = getBanner(size);
-    if (saved) {
-      els.text.value = saved.text || "";
-      els.bg.value = saved.bg || "#ffffff";
-      els.color.value = saved.color || "#333333";
-      els.font.value = saved.fontSize || 24;
-      els.template.value = saved.template || "t1";
-    } else {
-      // ברירת מחדל לכל גודל
-      els.text.value = "";
-      els.bg.value = "#ffffff";
-      els.color.value = "#333333";
-      els.font.value = 24;
-      els.template.value = "t1";
-    }
-    render(size); // רענון תצוגה
-  }
-
-  // תבניות – שינוי קל ב-style של הטקסט
-  function applyTemplate(el, template) {
-    el.style.position = "relative";
-    el.style.display = "grid";
-    el.style.placeItems = "center";
-    el.style.textAlign = "center";
-    el.style.padding = "8px";
-
-    // reset שמותרים
-    el.style.boxShadow = "none";
-    el.style.border = "none";
-    el.dataset.template = template;
-
-    // עיצוב לפי תבנית
-    if (template === "t1") {
-      // מרכזי נקי
-    } else if (template === "t2") {
-      // Badge קטן
-      el.style.boxShadow = "0 0 0 3px rgba(0,0,0,.08) inset";
-      el.style.borderRadius = "10px";
-    } else if (template === "t3") {
-      // Ribbon עליון
-      el.style.borderTop = "8px solid rgba(0,0,0,.15)";
-      el.style.borderRadius = "4px";
-    }
-  }
-
-  // רינדור תצוגה לכל גודל
-  function render(sizeJustChanged) {
-    const v = {
-      text: els.text.value,
+  function collect() {
+    return {
+      template: els.template.value,
+      imgUrl: els.imgUrl.value.trim(),
+      title: els.title.value,
+      subtitle: els.subtitle.value,
+      body: els.body.value,
       bg: els.bg.value,
       color: els.color.value,
-      fontSize: Number(els.font.value) || 24,
-      template: els.template.value,
+      fontSize: Number(els.fontSize.value) || 22,
+      updatedAt: Date.now(),
     };
-
-    // יעד לפי בחירה: מעדכנים גם את השני כדי שתמיד נראה את שניהם
-    // 250x250
-    const s250 = sizeJustChanged === "250x250" ? v : (getBanner("250x250") || v);
-    const el250 = els.prev250;
-    el250.textContent = s250.text || " ";
-    el250.parentElement.style.background = s250.bg;
-    el250.style.color = s250.color;
-    el250.style.fontSize = s250.fontSize + "px";
-    applyTemplate(el250, s250.template);
-
-    // 300x600
-    const s300 = sizeJustChanged === "300x600" ? v : (getBanner("300x600") || v);
-    const el300 = els.prev300;
-    el300.textContent = s300.text || " ";
-    el300.parentElement.style.background = s300.bg;
-    el300.style.color = s300.color;
-    el300.style.fontSize = s300.fontSize + "px";
-    applyTemplate(el300, s300.template);
   }
 
-  // שמירה
+  function loadStateFor(size) {
+    const s = getBanner(size) || {};
+    els.template.value = s.template ? s.template : "t1";
+    els.imgUrl.value = s.imgUrl ? s.imgUrl : "";
+    els.title.value = s.title ? s.title : "";
+    els.subtitle.value = s.subtitle ? s.subtitle : "";
+    els.body.value = s.body ? s.body : "";
+    if (s.bg) {
+      els.bg.value = s.bg;
+    } else {
+      if (els.template.value === "t1") {
+        els.bg.value = "#E7C282";
+      } else {
+        els.bg.value = "#ffffff";
+      }
+    }
+    els.color.value = s.color ? s.color : "#2b2b2b";
+    els.fontSize.value = s.fontSize ? s.fontSize : 22;
+    renderAll();
+  }
+
   function persist(size) {
-    saveBanner(size, {
-      text: els.text.value,
-      bg: els.bg.value,
-      color: els.color.value,
-      fontSize: Number(els.font.value) || 24,
-      template: els.template.value,
-    });
+    const data = collect();
+    saveBanner(size, data);
   }
 
-  // האזנות – טעינת מצב לפי גודל
-  els.size.addEventListener("change", () => {
+  // Render (בלי CSS variables)
+  function applyStateToEl(el, s) {
+    if (!s) return;
+    el.style.background = s.bg ? s.bg : "#ffffff";
+    el.style.color = s.color ? s.color : "#2b2b2b";
+    el.style.fontSize = (s.fontSize ? s.fontSize : 22) + "px";
+    if (s.imgUrl) {
+      el.style.backgroundImage = 'url("' + s.imgUrl + '")';
+      el.style.backgroundSize = "cover";
+      el.style.backgroundPosition = "center";
+    } else {
+      el.style.backgroundImage = "none";
+    }
+    el.dataset.tpl = s.template ? s.template : "t1";
+    el.innerHTML =
+      '<div class="title">' +
+      (s.title ? s.title : "") +
+      '</div><div class="subtitle">' +
+      (s.subtitle ? s.subtitle : "") +
+      '</div><div class="body">' +
+      (s.body ? s.body : "") +
+      "</div>";
+  }
+
+  function renderAll() {
+    const s250 = getBanner("250x250") || collect();
+    const s300 = getBanner("300x600") || collect();
+    applyStateToEl(els.prev250, s250);
+    applyStateToEl(els.prev300, s300);
+  }
+
+  // Events
+  els.size.addEventListener("change", function () {
     loadStateFor(els.size.value);
   });
 
-  // האזנות – עדכון חי ושמירה אוטומטית
-  const onChange = () => {
-    const size = els.size.value;
-    render(size);
-    persist(size);
-  };
-  [els.text, els.bg, els.color, els.font, els.template].forEach((input) =>
-    input.addEventListener("input", onChange)
-  );
+  [
+    els.template,
+    els.imgUrl,
+    els.title,
+    els.subtitle,
+    els.body,
+    els.bg,
+    els.color,
+    els.fontSize,
+  ].forEach(function (inp) {
+    inp.addEventListener("input", function () {
+      persist(els.size.value);
+      renderAll();
+    });
+  });
 
-  // אתחול: נטען מצב הגודל הראשון
+  // Actions
+  els.goLive.addEventListener("click", function () {
+    setBannerActive(els.size.value, true);
+  });
+
+  els.unpublish.addEventListener("click", function () {
+    setBannerActive(els.size.value, false);
+  });
+
+  els.resetSize.addEventListener("click", function () {
+    resetBanner(els.size.value);
+    loadStateFor(els.size.value);
+    renderAll();
+  });
+
+  els.deleteSize.addEventListener("click", function () {
+    deleteBanner(els.size.value);
+    loadStateFor(els.size.value);
+    renderAll();
+  });
+
+  // init
   loadStateFor(els.size.value);
 }

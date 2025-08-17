@@ -1,4 +1,7 @@
-// Initialize a default user if no users exist in localStorage
+// ==========================
+// Users (auth)
+// ==========================
+
 export function initDefaultUser() {
   const users = getUsers();
   if (users.length === 0) {
@@ -8,11 +11,8 @@ export function initDefaultUser() {
   }
 }
 
-// Retrieve users from localStorage
-// If data exists, parse it; otherwise return an empty array
 export function getUsers() {
   const data = localStorage.getItem("users");
-
   if (data) {
     return JSON.parse(data);
   } else {
@@ -20,120 +20,297 @@ export function getUsers() {
   }
 }
 
-// Save a new user to localStorage
 export function saveUser(newUser) {
-  const users = getUsers(); // Retrieve existing users
-  users.push(newUser); // Add the new user to the array
-  localStorage.setItem("users", JSON.stringify(users)); // Save the updated array back to localStorage.
+  const users = getUsers();
+  users.push(newUser);
+  localStorage.setItem("users", JSON.stringify(users));
 }
 
-// Check if a user with the given username exists
 export function findUser(username) {
   const users = getUsers();
-  return users.find((u) => u.username === username);
+  for (let i = 0; i < users.length; i++) {
+    if (users[i].username === username) {
+      return users[i];
+    }
+  }
+  return undefined;
 }
 
-// Delete a user by username
 export function deleteUser(username) {
   const users = getUsers();
   const filtered = [];
-
   for (let i = 0; i < users.length; i++) {
     if (users[i].username !== username) {
       filtered.push(users[i]);
     }
   }
-
   localStorage.setItem("users", JSON.stringify(filtered));
 }
 
-// Get the currently logged-in user from localStorage
 export function setLoggedInUser(username) {
   localStorage.setItem("loggedInUser", username);
 }
 
-// Retrieve the currently logged-in user from localStorage
 export function getLoggedInUser() {
   return localStorage.getItem("loggedInUser");
 }
 
-// Clear the currently logged-in user from localStorage
 export function clearLoggedInUser() {
   localStorage.removeItem("loggedInUser");
 }
 
-// ===== BANNERS STORAGE =====
+// ==========================
+// Banners
+// ==========================
+
 const BANNERS_KEY = "banners";
 
 export function getBanners() {
   const raw = localStorage.getItem(BANNERS_KEY);
-  if (!raw) return {};
+  if (!raw) {
+    return {};
+  }
   try {
-    return JSON.parse(raw);
-  } catch {
+    const obj = JSON.parse(raw);
+    if (obj && typeof obj === "object") {
+      return obj;
+    } else {
+      return {};
+    }
+  } catch (e) {
     return {};
   }
 }
 
 export function saveBanner(size, data) {
   const all = getBanners();
-  all[size] = { ...data, updatedAt: Date.now() };
+  let prev = {};
+  if (all[size]) {
+    prev = all[size];
+  }
+
+  let activeValue;
+  if (data.active !== undefined) {
+    activeValue = data.active;
+  } else if (prev.active !== undefined) {
+    activeValue = prev.active;
+  } else {
+    activeValue = false;
+  }
+
+  all[size] = {
+    ...prev,
+    ...data,
+    active: activeValue,
+    updatedAt: Date.now(),
+  };
+
   localStorage.setItem(BANNERS_KEY, JSON.stringify(all));
 }
 
 export function getBanner(size) {
   const all = getBanners();
-  return all[size] || null;
+  if (all[size]) {
+    return all[size];
+  } else {
+    return null;
+  }
 }
 
 export function clearBanners() {
   localStorage.removeItem(BANNERS_KEY);
 }
 
-// === MARKETING (email) ===
+export function deleteBanner(size) {
+  const all = getBanners();
+  if (all[size]) {
+    delete all[size];
+    const keys = Object.keys(all);
+    if (keys.length === 0) {
+      localStorage.removeItem(BANNERS_KEY);
+    } else {
+      localStorage.setItem(BANNERS_KEY, JSON.stringify(all));
+    }
+  }
+}
+
+export function resetBanner(size) {
+  deleteBanner(size);
+}
+
+export function resetAllBanners() {
+  localStorage.removeItem(BANNERS_KEY);
+}
+
+export function setBannerActive(size, active) {
+  const all = getBanners();
+  if (all[size]) {
+    if (active) {
+      all[size].active = true;
+    } else {
+      all[size].active = false;
+    }
+    all[size].updatedAt = Date.now();
+    localStorage.setItem(BANNERS_KEY, JSON.stringify(all));
+  }
+}
+
+export function isBannerActive(size) {
+  const b = getBanner(size);
+  if (b && b.active) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export function getActiveBanners() {
+  const all = getBanners();
+  const result = {};
+  for (const key in all) {
+    if (all[key] && all[key].active) {
+      result[key] = all[key];
+    }
+  }
+  return result;
+}
+
+// ==========================
+// Marketing (email)
+// ==========================
+
 const MARKETING_KEY = "marketingPage";
 
 export function getMarketingPage() {
   const raw = localStorage.getItem(MARKETING_KEY);
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw);
-  } catch {
+  } catch (e) {
     return null;
   }
 }
 
 export function saveMarketingPage(data) {
-  localStorage.setItem(
-    MARKETING_KEY,
-    JSON.stringify({ ...data, updatedAt: Date.now() })
-  );
+  const prev = getMarketingPage();
+  let prevData = {};
+  if (prev) {
+    prevData = prev;
+  }
+
+  let activeValue;
+  if (data.active !== undefined) {
+    activeValue = data.active;
+  } else if (prevData.active !== undefined) {
+    activeValue = prevData.active;
+  } else {
+    activeValue = false;
+  }
+
+  const newData = {
+    ...prevData,
+    ...data,
+    active: activeValue,
+    updatedAt: Date.now(),
+  };
+
+  localStorage.setItem(MARKETING_KEY, JSON.stringify(newData));
 }
 
 export function clearMarketingPage() {
   localStorage.removeItem(MARKETING_KEY);
 }
 
-// === LANDING PAGE ===
+export function setMarketingActive(active) {
+  const prev = getMarketingPage();
+  if (prev) {
+    const copy = { ...prev };
+    if (active) {
+      copy.active = true;
+    } else {
+      copy.active = false;
+    }
+    saveMarketingPage(copy);
+  }
+}
+
+export function isMarketingActive() {
+  const p = getMarketingPage();
+  if (p && p.active) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// ==========================
+// Landing Page
+// ==========================
+
 const LANDING_KEY = "landingPage";
 
 export function getLandingPage() {
   const raw = localStorage.getItem(LANDING_KEY);
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw);
-  } catch {
+  } catch (e) {
     return null;
   }
 }
 
 export function saveLandingPage(data) {
-  localStorage.setItem(
-    LANDING_KEY,
-    JSON.stringify({ ...data, updatedAt: Date.now() })
-  );
+  const prev = getLandingPage();
+  let prevData = {};
+  if (prev) {
+    prevData = prev;
+  }
+
+  let activeValue;
+  if (data.active !== undefined) {
+    activeValue = data.active;
+  } else if (prevData.active !== undefined) {
+    activeValue = prevData.active;
+  } else {
+    activeValue = false;
+  }
+
+  const newData = {
+    ...prevData,
+    ...data,
+    active: activeValue,
+    updatedAt: Date.now(),
+  };
+
+  localStorage.setItem(LANDING_KEY, JSON.stringify(newData));
 }
 
 export function clearLandingPage() {
   localStorage.removeItem(LANDING_KEY);
+}
+
+export function setLandingActive(active) {
+  const prev = getLandingPage();
+  if (prev) {
+    const copy = { ...prev };
+    if (active) {
+      copy.active = true;
+    } else {
+      copy.active = false;
+    }
+    saveLandingPage(copy);
+  }
+}
+
+export function isLandingActive() {
+  const p = getLandingPage();
+  if (p && p.active) {
+    return true;
+  } else {
+    return false;
+  }
 }
