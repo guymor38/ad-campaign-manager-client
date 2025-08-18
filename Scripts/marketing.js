@@ -1,4 +1,4 @@
-import { loadStyle } from "./utils.js";
+import { loadStyle, showToast, el } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
@@ -8,7 +8,7 @@ import {
   clearLoggedInUser,
   getMarketingPage,
   saveMarketingPage,
-  clearMarketingPage,
+  setMarketingActive,
 } from "./storage.js";
 
 export function renderMarketingPage(username) {
@@ -19,35 +19,39 @@ export function renderMarketingPage(username) {
 
   const header = renderHeader(
     username,
-    function (key) {
-      if (key === "dashboard") {
-        renderDashboard(username);
-      } else if (key === "banners") {
-        renderBannerEditor(username);
-      } else if (key === "marketing") {
-        renderMarketingPage(username);
-      } else if (key === "landing") {
-        renderLandingPage(username);
+    (key) => {
+      switch (key) {
+        case "dashboard":
+          renderDashboard(username);
+          break;
+        case "banners":
+          renderBannerEditor(username);
+          break;
+        case "marketing":
+          renderMarketingPage(username);
+          break;
+        case "landing":
+          renderLandingPage(username);
+          break;
       }
     },
-    function () {
+    () => {
       clearLoggedInUser();
       renderLogin();
     }
   );
   app.appendChild(header);
 
-  const container = document.createElement("div");
-  container.className = "marketing-container";
+  const shell = el("div", "marketing-container");
 
-  const controls = document.createElement("div");
-  controls.className = "panel";
+  const controls = el("div", "panel");
   controls.innerHTML = `
     <h2>Email Builder</h2>
-    <p style="opacity:.85;margin:6px 0 12px">רוחב קבוע 650px · שמירה אוטומטית</p>
+    <p style="opacity:.8;margin:6px 0 12px">650px רוחב קבוע · שמירה אוטומטית</p>
 
     <div class="marketing-editor">
-      <div class="field"><label>Template</label>
+      <div class="field">
+        <label>Template</label>
         <select id="tpl">
           <option value="t1">Template 1 – Clean</option>
           <option value="t2">Template 2 – Hero</option>
@@ -55,15 +59,42 @@ export function renderMarketingPage(username) {
         </select>
       </div>
 
-      <div class="field"><label>Title</label><input id="title" placeholder="Main headline"/></div>
-      <div class="field"><label>Subtitle</label><input id="subtitle" placeholder="Sub headline"/></div>
-      <div class="field"><label>Body</label><textarea id="body" placeholder="Email body..."></textarea></div>
-      <div class="field"><label>Image URL</label><input id="imgUrl" placeholder="https://..."/></div>
-      <div class="field"><label>Button text</label><input id="ctaText" placeholder="Shop now"/></div>
-      <div class="field"><label>Button URL</label><input id="ctaUrl" placeholder="https://example.com"/></div>
-      <div class="field"><label>Background</label><input id="bg" type="color" value="#ffffff"/></div>
-      <div class="field"><label>Text color</label><input id="color" type="color" value="#333333"/></div>
-      <div class="field"><label>Accent color (button)</label><input id="accent" type="color" value="#2d89ef"/></div>
+      <div class="field"><label>Title</label>
+        <input id="title" placeholder="Your great headline"/>
+      </div>
+
+      <div class="field"><label>Subtitle</label>
+        <input id="subtitle" placeholder="Sub headline goes here"/>
+      </div>
+
+      <div class="field"><label>Body</label>
+        <textarea id="body" placeholder="Body copy for your email. Keep it short and clear."></textarea>
+      </div>
+
+      <div class="field"><label>Image URL</label>
+        <input id="imgUrl" placeholder="https://…"/>
+      </div>
+
+      <div class="field"><label>Button text</label>
+        <input id="ctaText" placeholder="Learn more"/>
+      </div>
+
+      <div class="field"><label>Button URL</label>
+        <input id="ctaUrl" placeholder="https://example.com"/>
+      </div>
+
+      <div class="field"><label>Background</label>
+        <input id="bg" type="color"/>
+      </div>
+
+      <div class="field"><label>Text color</label>
+        <input id="color" type="color"/>
+      </div>
+
+      <div class="field"><label>Accent color (button)</label>
+        <input id="accent" type="color"/>
+      </div>
+
       <div class="field"><label>Font family</label>
         <select id="font">
           <option value="system-ui, -apple-system, Segoe UI, Roboto">System</option>
@@ -74,25 +105,23 @@ export function renderMarketingPage(username) {
       </div>
     </div>
 
-    <div class="actions" style="margin-top:12px">
-      <button id="go-live" type="button">Go live</button>
-      <button id="unpublish" type="button">Unpublish</button>
-      <button id="reset" type="button">Reset</button>
-      <button id="delete" type="button" class="danger">Delete</button>
+    <div class="form-actions">
+      <button id="go"    class="btn btn--primary" type="button">Go live</button>
+      <button id="reset" class="btn btn--ghost"   type="button">Reset</button>
     </div>
   `;
 
-  const preview = document.createElement("div");
-  preview.className = "panel";
+  const preview = el("div", "panel");
   preview.innerHTML = `
     <h3 style="margin-bottom:10px">Live Preview (650px)</h3>
     <div class="email-canvas" id="email" aria-label="email preview"></div>
   `;
 
-  container.append(controls, preview);
-  app.appendChild(container);
+  shell.append(controls, preview);
+  app.appendChild(shell);
 
-  const DEF = {
+  // placeholders לדמו (לתצוגה בלבד)
+  const DEMO = {
     tpl: "t1",
     title: "Your great headline",
     subtitle: "Sub headline goes here",
@@ -105,8 +134,6 @@ export function renderMarketingPage(username) {
     accent: "#2d89ef",
     font: "system-ui, -apple-system, Segoe UI, Roboto",
   };
-
-  const state = Object.assign({}, DEF, getMarketingPage() || {});
 
   const els = {
     tpl: controls.querySelector("#tpl"),
@@ -121,153 +148,155 @@ export function renderMarketingPage(username) {
     accent: controls.querySelector("#accent"),
     font: controls.querySelector("#font"),
     email: preview.querySelector("#email"),
-
-    goLive: controls.querySelector("#go-live"),
-    unpublish: controls.querySelector("#unpublish"),
-    resetBtn: controls.querySelector("#reset"),
-    deleteBtn: controls.querySelector("#delete"),
+    go: controls.querySelector("#go"),
+    reset: controls.querySelector("#reset"),
   };
 
-  Object.entries(state).forEach(function ([k, v]) {
-    if (els[k]) {
-      els[k].value = v;
-    }
-  });
-
-  function renderTpl(s) {
-    const base =
-      "background:" +
-      s.bg +
-      "; color:" +
-      s.color +
-      "; font-family:" +
-      s.font +
-      "; width:650px; margin:0 auto; line-height:1.5;";
-    const btn =
-      '<a href="' +
-      (s.ctaUrl ? s.ctaUrl : "#") +
-      '" style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;background:' +
-      s.accent +
-      ';color:#fff;font-weight:600">' +
-      (s.ctaText ? s.ctaText : "Button") +
-      "</a>";
-    let img = "";
-    if (s.imgUrl) {
-      img =
-        '<img src="' +
-        s.imgUrl +
-        '" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>';
-    }
-
-    if (s.tpl === "t1") {
-      return (
-        '<div style="' +
-        base +
-        ' padding:18px;">' +
-        "<h1 style='margin:0 0 8px'>" +
-        s.title +
-        "</h1>" +
-        "<h3 style='margin:0 0 14px;opacity:.85'>" +
-        s.subtitle +
-        "</h3>" +
-        img +
-        "<p style='margin:0 0 16px'>" +
-        s.body +
-        "</p>" +
-        btn +
-        "</div>"
-      );
-    }
-
-    if (s.tpl === "t2") {
-      return (
-        '<div style="' +
-        base +
-        '">' +
-        "<div style='padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;'>" +
-        (img ||
-          "<div style='height:180px;display:grid;place-items:center;color:#888'>Hero</div>") +
-        "</div>" +
-        "<div style='padding:18px;'>" +
-        "<h1 style='margin:0 0 8px'>" +
-        s.title +
-        "</h1>" +
-        "<p style='margin:0 0 16px'>" +
-        s.body +
-        "</p>" +
-        btn +
-        "</div></div>"
-      );
-    }
-
-    // t3 – Card
-    return (
-      '<div style="' +
-      base +
-      ' padding:18px;">' +
-      "<div style='background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)'>" +
-      (img || "") +
-      "<h2 style='margin:0 0 8px'>" +
-      s.title +
-      "</h2>" +
-      "<p style='margin:0 0 14px;opacity:.9'>" +
-      s.subtitle +
-      "</p>" +
-      "<p style='margin:0 0 16px'>" +
-      s.body +
-      "</p>" +
-      btn +
-      "</div></div>"
-    );
+  function readForm() {
+    return {
+      tpl: els.tpl.value,
+      title: els.title.value.trim(),
+      subtitle: els.subtitle.value.trim(),
+      body: els.body.value.trim(),
+      imgUrl: els.imgUrl.value.trim(),
+      ctaText: els.ctaText.value.trim(),
+      ctaUrl: els.ctaUrl.value.trim(),
+      bg: els.bg.value,
+      color: els.color.value,
+      accent: els.accent.value,
+      font: els.font.value,
+    };
   }
 
   function render() {
-    els.email.innerHTML = renderTpl(state);
+    const s = readForm();
+    const v = {
+      tpl: s.tpl || DEMO.tpl,
+      title: s.title || DEMO.title,
+      subtitle: s.subtitle || DEMO.subtitle,
+      body: s.body || DEMO.body,
+      imgUrl: s.imgUrl || "",
+      ctaText: s.ctaText || DEMO.ctaText,
+      ctaUrl: s.ctaUrl || DEMO.ctaUrl,
+      bg: s.bg || DEMO.bg,
+      color: s.color || DEMO.color,
+      accent: s.accent || DEMO.accent,
+      font: s.font || DEMO.font,
+    };
+
+    const base = `
+      background:${v.bg}; color:${v.color}; font-family:${v.font};
+      width:650px; margin:0 auto; line-height:1.5;
+    `;
+    const btn = (text, url) => `
+      <a href="${url || "#"}"
+         style="display:inline-block;padding:10px 16px;border-radius:8px;
+                text-decoration:none;background:${
+                  v.accent
+                };color:#fff;font-weight:600">
+        ${text || "Button"}
+      </a>`;
+    const img = v.imgUrl
+      ? `<img src="${v.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
+      : "";
+
+    let html = "";
+    if (v.tpl === "t2") {
+      html = `
+        <div style="${base}">
+          <div style="padding:0 0 14px;text-align:center;background:rgba(0,0,0,.03);border-radius:8px;">
+            ${
+              img ||
+              `<div style="height:180px;display:grid;place-items:center;color:#888">Hero</div>`
+            }
+          </div>
+          <div style="padding:18px;">
+            <h1 style="margin:0 0 8px">${v.title}</h1>
+            <p style="margin:0 0 16px">${v.body}</p>
+            ${btn(v.ctaText, v.ctaUrl)}
+          </div>
+        </div>`;
+    } else if (v.tpl === "t3") {
+      html = `
+        <div style="${base} padding:18px;">
+          <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+            ${img}
+            <h2 style="margin:0 0 8px">${v.title}</h2>
+            <p style="margin:0 0 14px;opacity:.9">${v.subtitle}</p>
+            <p style="margin:0 0 16px">${v.body}</p>
+            ${btn(v.ctaText, v.ctaUrl)}
+          </div>
+        </div>`;
+    } else {
+      html = `
+        <div style="${base} padding:18px;">
+          <h1 style="margin:0 0 8px">${v.title}</h1>
+          <h3 style="margin:0 0 14px;opacity:.85">${v.subtitle}</h3>
+          ${img}
+          <p style="margin:0 0 16px">${v.body}</p>
+          ${btn(v.ctaText, v.ctaUrl)}
+        </div>`;
+    }
+
+    els.email.innerHTML = html;
   }
 
-  function persist() {
-    saveMarketingPage(state);
+  function persist(active = false) {
+    const data = { ...readForm() };
+    if (active) data.active = true;
+    saveMarketingPage(data);
   }
 
-  Object.keys(state).forEach(function (k) {
-    if (!els[k]) return;
-    els[k].addEventListener("input", function () {
-      state[k] = els[k].value;
-      render();
-      persist();
-    });
-  });
-
-  // actions
-  els.goLive.addEventListener("click", function () {
-    const copy = { ...state };
-    copy.active = true;
-    saveMarketingPage(copy);
-  });
-
-  els.unpublish.addEventListener("click", function () {
-    const copy = { ...state };
-    copy.active = false;
-    saveMarketingPage(copy);
-  });
-
-  els.resetBtn.addEventListener("click", function () {
-    Object.keys(DEF).forEach(function (k) {
-      state[k] = DEF[k];
-      if (els[k]) els[k].value = DEF[k];
-    });
+  function resetForm() {
+    ["title", "subtitle", "body", "imgUrl", "ctaText", "ctaUrl"].forEach(
+      (id) => (els[id].value = "")
+    );
+    els.bg.value = "";
+    els.color.value = "";
+    els.accent.value = "";
+    // font/tpl נשארים
     render();
-    saveMarketingPage(state);
-  });
+  }
 
-  els.deleteBtn.addEventListener("click", function () {
-    clearMarketingPage();
-    Object.keys(DEF).forEach(function (k) {
-      state[k] = DEF[k];
-      if (els[k]) els[k].value = DEF[k];
-    });
-    render();
-  });
-
+  // טעינה של שמור קיים — לא ממלא לשדות טקסט אם ריקים (כדי לשמר placeholder)
+  const saved = getMarketingPage() || {};
+  els.tpl.value = saved.tpl || "t1";
+  els.font.value = saved.font || DEMO.font;
+  els.bg.value = saved.bg || "";
+  els.color.value = saved.color || "";
+  els.accent.value = saved.accent || "";
+  // השדות הטקסטואליים נשארים ריקים כברירת מחדל
   render();
+
+  // אירועים
+  [
+    "tpl",
+    "title",
+    "subtitle",
+    "body",
+    "imgUrl",
+    "ctaText",
+    "ctaUrl",
+    "bg",
+    "color",
+    "accent",
+    "font",
+  ].forEach((k) =>
+    els[k].addEventListener("input", () => {
+      persist(false);
+      render();
+    })
+  );
+
+  els.go.addEventListener("click", () => {
+    persist(true);
+    setMarketingActive(true);
+    showToast("Published email");
+    resetForm();
+  });
+
+  els.reset.addEventListener("click", () => {
+    resetForm();
+    showToast("Reset");
+  });
 }

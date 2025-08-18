@@ -1,61 +1,4 @@
-.marketing-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
-  color: #80b9b1;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 16px;
-}
-
-.marketing-templates {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.template-card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 14px;
-}
-
-.marketing-editor {
-  margin-top: 8px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
-}
-@media (max-width: 800px) {
-  .marketing-editor {
-    grid-template-columns: 1fr;
-  }
-}
-
-.marketing-editor .field {
-  display: flex;
-  flex-direction: column;
-}
-.marketing-editor label {
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.marketing-editor input,
-.marketing-editor textarea,
-.marketing-editor select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 2px solid #645774;
-  background: #fff;
-  color: #80b9b1;
-}
-.marketing-editor textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
+/* ===== Marketing / Email Builder (GRID) ===== */
 .marketing-container {
   max-width: 1100px;
   margin: 0 auto;
@@ -63,16 +6,16 @@
   color: #80b9b1;
 
   display: grid;
-  grid-template-columns: 1fr 650px; /* שמאל טופס | ימין קנבס מייל */
+  grid-template-columns: 1fr 1fr; /* שמאל: טופס | ימין: תצוגת אימייל */
   gap: 20px;
 }
-@media (max-width: 1000px) {
+@media (max-width: 900px) {
   .marketing-container {
     grid-template-columns: 1fr;
   }
 }
 
-/* פנלים */
+/* Panels */
 .panel {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -80,10 +23,10 @@
   padding: 16px;
 }
 
-/* טופס */
+/* טופס עורך (GRID) */
 .marketing-editor {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* שני טורים */
   gap: 12px 16px;
 }
 @media (max-width: 700px) {
@@ -91,38 +34,110 @@
     grid-template-columns: 1fr;
   }
 }
-
-.field {
-  display: flex;
-  flex-direction: column;
+.marketing-editor .field {
+  display: grid;
+  gap: 6px;
 }
-.field label {
+.marketing-editor label {
   font-weight: 600;
-  margin-bottom: 6px;
 }
-
 .marketing-editor input,
-.marketing-editor textarea,
-.marketing-editor select {
+.marketing-editor select,
+.marketing-editor textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 2px solid #645774;
   background: #fff;
-  color: #80b9b1;
+  color: #2b2b2b;
 }
 .marketing-editor textarea {
-  min-height: 120px;
+  min-height: 96px;
   resize: vertical;
 }
 
-/* קנבס המייל – 650px קבוע */
+/* קנבס אימייל קבוע 650px (תוכן מוזרק ב-JS) */
 .email-canvas {
   width: 650px;
   margin: 0 auto;
-  background: #fff;
   border-radius: 12px;
-  padding: 0;
+  border: 2px dashed #645774;
+  background: #fff;
+  min-height: 200px;
   overflow: hidden;
-  color: #333;
+  padding: 8px;
+}
+@media (max-width: 720px) {
+  .email-canvas {
+    width: 100%;
+  }
+}
+
+/* Fancy actions */
+.panel .actions,
+.section .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* base button */
+.panel .actions button,
+.section .actions button {
+  appearance: none;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  outline-offset: 3px;
+  transition: transform 0.06s ease, box-shadow 0.2s ease, filter 0.2s ease,
+    background-color 0.2s;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* primary (first) */
+.panel .actions button:first-child,
+.section .actions button:first-child {
+  color: #fff;
+  background: linear-gradient(180deg, #8bd0c8 0%, #6fb6ae 100%);
+}
+.panel .actions button:first-child:hover,
+.section .actions button:first-child:hover {
+  filter: brightness(1.05);
+}
+.panel .actions button:first-child:active,
+.section .actions button:first-child:active {
+  transform: translateY(1px);
+}
+
+/* outline (second) */
+.panel .actions button:last-child,
+.section .actions button:last-child {
+  color: #80b9b1;
+  background: transparent;
+  border: 2px solid #80b9b1;
+  box-shadow: none;
+}
+.panel .actions button:last-child:hover,
+.section .actions button:last-child:hover {
+  background: rgba(128, 185, 177, 0.08);
+}
+.panel .actions button:last-child:active,
+.section .actions button:last-child:active {
+  transform: translateY(1px);
+}
+
+/* Diagonal placeholder background when bg is empty */
+.placeholder-surface {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.18) 0 12px,
+    rgba(255, 255, 255, 0.06) 12px 24px
+  );
+  border-radius: 12px;
 }

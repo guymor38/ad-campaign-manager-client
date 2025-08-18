@@ -16,7 +16,6 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 16px;
-  position: relative; /* מאפשר למקם את כפתור ה-X */
 }
 
 /* כותרת ראשית */
@@ -44,78 +43,70 @@
   cursor: pointer;
   box-shadow: 2px 2px 4px #645774;
   transition: filter 0.15s ease-in-out;
-  margin: 6px 6px 0 0;
 }
 .dashboard-card button:hover {
   filter: brightness(0.95);
 }
 
-/* כפתורי פעולה ייחודיים */
-.btn-go-live {
-  background: #4caf50; /* ירוק */
-}
-.btn-go-live:hover {
-  filter: brightness(0.9);
-}
-
-.btn-reset {
-  background: #ff9800; /* כתום */
-}
-.btn-reset:hover {
-  filter: brightness(0.9);
+/* ===== כותרת הסקשן ===== */
+.live-section h2 {
+  margin: 0 0 8px;
+  font-size: 1.3rem;
+  color: #80b9b1;
 }
 
-.btn-unpublish {
-  background: #f44336; /* אדום */
-}
-.btn-unpublish:hover {
-  filter: brightness(0.9);
-}
-
-/* ===== רשת תצוגות הבאנרים (אם מציגים כרטיסים) ===== */
+/* ===== רשת תצוגות הבאנרים/מייל/לנדינג ===== */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* רספונסיבי */
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(320px, 1fr)
+  ); /* 3 בעמודה כשאפשר */
   gap: 20px;
 }
 
-/* מסגרת תצוגת באנר */
-.dashboard-banner-frame {
-  margin: 10px 0 12px;
-  border: 2px dashed #645774;
-  border-radius: 10px;
-  display: block;
-  overflow: hidden;
-  background: #fff; /* ברירת מחדל; ניתן לדרוס דינמית ב-JS */
+/* כרטיס חי */
+.live-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
 }
 
-/* כותרת כרטיס באנר */
-.dashboard-card h3 {
+/* כותרת כרטיס */
+.live-card h3 {
   margin: 0 0 8px;
   font-size: 1.1rem;
   color: #80b9b1;
 }
 
-/* כפתור X קטן למחיקת קמפיין */
-.delete-campaign-btn {
+/* כפתור סגירה קטן (Unpublish) */
+.card-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
+  top: 10px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: 50%;
-  background: #f44336; /* אדום */
+  border-radius: 8px;
+  background: #80b9b1;
   color: #fff;
-  font-size: 14px;
-  font-weight: bold;
-  line-height: 22px;
-  text-align: center;
   cursor: pointer;
-  transition: filter 0.15s ease-in-out;
+  box-shadow: 1px 1px 2px #645774;
 }
-.delete-campaign-btn:hover {
-  filter: brightness(0.9);
+
+/* ממוזערות */
+.snapshot {
+  margin: 10px 0 0;
+  border: 2px dashed #645774;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.scale-inner {
+  /* הקנבס לפני scale – אין כאן מידות כדי שלא ננעל גובה */
+  transform-origin: top left;
 }
 
 /* התאמות קטנות למסכים צרים */
@@ -123,4 +114,11 @@
   .dashboard-card button {
     width: 100%;
   }
+}
+
+/* ===== בונוס: ירושת צבע לטקסטים בתוך הממוזערת ===== */
+.snap-title,
+.snap-sub,
+.snap-body {
+  color: inherit;
 }

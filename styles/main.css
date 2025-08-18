@@ -1,4 +1,5 @@
 /* Main styles for the application */
+@import url("./utilities.css");
 @import url("./reset.css");
 @import url("./login.css");
 @import url("./register.css");
@@ -7,3 +8,7 @@
 @import url("./marketing.css");
 @import url("./landingPage.css");
 @import url("./header.css");
+
+
+
+

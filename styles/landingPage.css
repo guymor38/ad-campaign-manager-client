@@ -1,3 +1,4 @@
+/* ===== Landing Page Builder (GRID) ===== */
 .landing-container {
   max-width: 1100px;
   margin: 0 auto;
@@ -14,6 +15,7 @@
   }
 }
 
+/* אזור כללי / "section" */
 .section {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -21,9 +23,10 @@
   padding: 16px;
 }
 
+/* טופס (GRID) */
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* שני טורים */
   gap: 12px 16px;
 }
 @media (max-width: 700px) {
@@ -31,14 +34,13 @@
     grid-template-columns: 1fr;
   }
 }
-
 .field {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  gap: 6px;
 }
 .field label {
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 .section input,
 .section select,
@@ -48,18 +50,94 @@
   border-radius: 10px;
   border: 2px solid #645774;
   background: #fff;
-  color: #80b9b1;
+  color: #2b2b2b;
 }
 .section textarea {
   min-height: 100px;
   resize: vertical;
 }
 
+/* תצוגה חיה (קנבס) */
 .landing-preview {
   background: #fff;
   border-radius: 12px;
-  padding: 0;
+  padding: 8px;
   min-height: 300px;
   border: 2px dashed #645774;
   color: #645774;
+  overflow: hidden;
+}
+.landing-preview #canvas {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Fancy actions */
+.panel .actions,
+.section .actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* base button */
+.panel .actions button,
+.section .actions button {
+  appearance: none;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  outline-offset: 3px;
+  transition: transform 0.06s ease, box-shadow 0.2s ease, filter 0.2s ease,
+    background-color 0.2s;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* primary (first) */
+.panel .actions button:first-child,
+.section .actions button:first-child {
+  color: #fff;
+  background: linear-gradient(180deg, #8bd0c8 0%, #6fb6ae 100%);
+}
+.panel .actions button:first-child:hover,
+.section .actions button:first-child:hover {
+  filter: brightness(1.05);
+}
+.panel .actions button:first-child:active,
+.section .actions button:first-child:active {
+  transform: translateY(1px);
+}
+
+/* outline (second) */
+.panel .actions button:last-child,
+.section .actions button:last-child {
+  color: #80b9b1;
+  background: transparent;
+  border: 2px solid #80b9b1;
+  box-shadow: none;
+}
+.panel .actions button:last-child:hover,
+.section .actions button:last-child:hover {
+  background: rgba(128, 185, 177, 0.08);
+}
+.panel .actions button:last-child:active,
+.section .actions button:last-child:active {
+  transform: translateY(1px);
+}
+
+/* Diagonal placeholder background when bg is empty */
+.placeholder-surface {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.18) 0 12px,
+    rgba(255, 255, 255, 0.06) 12px 24px
+  );
+  border-radius: 12px;
 }

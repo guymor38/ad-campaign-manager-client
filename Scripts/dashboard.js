@@ -1,3 +1,4 @@
+// dashboard.js
 import { loadStyle } from "./utils.js";
 import { renderLogin } from "./login.js";
 import { renderHeader } from "./header.js";
@@ -6,15 +7,155 @@ import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
 import {
   clearLoggedInUser,
-  getBanner,
+
+  // banners
   getActiveBanners,
+  setBannerActive,
+
+  // marketing email
   isMarketingActive,
+  getMarketingPage,
+  setMarketingActive,
+
+  // landing page
   isLandingActive,
-  deleteBanner,
-  clearMarketingPage,
-  clearLandingPage,
+  getLandingPage,
+  setLandingActive,
 } from "./storage.js";
 
+/* -------- helpers (לוקאליים כדי שלא נהיה תלויים בכלי עזר חיצוניים) -------- */
+function el(tag, className, text) {
+  const n = document.createElement(tag);
+  if (className) n.className = className;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function parseSize(size) {
+  const [w, h] = size.split("x").map((n) => parseInt(n, 10));
+  return { w: w || 250, h: h || 250 };
+}
+
+// fallback קטן אם אין showToast ב-utils
+function showToastLocal(msg, type) {
+  if (window.showToast) {
+    window.showToast(msg, type);
+    return;
+  }
+  const t = el("div", "toast");
+  if (type === "warn") t.classList.add("warn");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1800);
+}
+
+/* -------------- ממוזערת עם scale – קובעים גובה סופי רק אחרי התוכן -------------- */
+function makeScaledBox(baseW, baseH) {
+  const wrapper = el("div", "snapshot"); // המסגרת החיצונית
+  const thumbW = 300; // רוחב ממוזערת
+  const scale = thumbW / baseW;
+
+  wrapper.style.width = thumbW + "px"; // את הגובה נשלים אחרי התוכן
+
+  const inner = el("div", "scale-inner"); // הקנבס הפנימי לפני scale
+  inner.style.width = baseW + "px";
+  inner.style.height = baseH + "px";
+  inner.style.transform = `scale(${scale})`;
+  inner.style.transformOrigin = "top left";
+
+  wrapper.appendChild(inner);
+
+  function finalizeHeight() {
+    // מדידה אחרי שהכנסנו תוכן (כולל scale)
+    const r = inner.getBoundingClientRect();
+    wrapper.style.height = r.height + "px"; // לא מכפילים שוב
+  }
+
+  return { wrapper, inner, finalizeHeight };
+}
+
+/* --------------------- רינדור תוכן לממוזערות (פשוט/ייצוגי) --------------------- */
+function renderBannerInner(root, data, w, h) {
+  root.innerHTML = "";
+  root.style.cssText = `
+    background: ${
+      data?.bg ||
+      "repeating-linear-gradient(45deg,#eee,#eee 10px,#f7f7f7 10px,#f7f7f7 20px)"
+    };
+    color: ${data?.color || "#333"};
+    width:${w}px; height:${h}px;
+    display:grid; place-items:center; text-align:center; padding:10px; box-sizing:border-box;
+    font-family: Georgia, serif;
+  `;
+  const title = el("div", "snap-title", data?.title || "Headline");
+  title.style.fontWeight = "700";
+  const sub = el("div", "snap-sub", data?.subtitle || "Subtitle");
+  sub.style.opacity = ".85";
+  const body = el("div", "snap-body", data?.body || "Body");
+  body.style.fontSize = "12px";
+  root.append(title, sub, body);
+}
+
+function renderEmailInner(root, s) {
+  root.innerHTML = `
+    <div style="
+      width:650px; box-sizing:border-box; padding:18px;
+      background:${s.bg || "#fff"}; color:${s.color || "#333"};
+      font-family:${s.font || "system-ui,-apple-system,Segoe UI,Roboto"};
+      line-height:1.5;">
+      <h1 style="margin:0 0 8px">${s.title || "Your great headline"}</h1>
+      <h3 style="margin:0 0 12px;opacity:.85">${
+        s.subtitle || "Sub headline goes here"
+      }</h3>
+      <p style="margin:0 0 16px">${
+        s.body || "Body copy for your email. Keep it short and clear."
+      }</p>
+      <a href="${s.ctaUrl || "#"}"
+         style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
+                background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
+        ${s.ctaText || "Learn more"}
+      </a>
+    </div>
+  `;
+}
+
+function renderLandingInner(root, s) {
+  root.innerHTML = `
+    <div style="
+      width:650px; box-sizing:border-box; padding:18px;
+      background:${s.bg || "#fff"}; color:${s.color || "#333"};
+      font-family:${s.font || "system-ui,-apple-system,Segoe UI,Roboto"};
+      line-height:1.5;">
+      <h1 style="margin:0 0 8px">${
+        s.title || "Bannerist helps you launch faster"
+      }</h1>
+      <h3 style="margin:0 0 12px;opacity:.85">${
+        s.subtitle || "Create and manage ads, emails & landings in minutes."
+      }</h3>
+      <p style="margin:0 0 16px">${
+        s.body ||
+        "Design quickly, preview instantly, and save your work locally."
+      }</p>
+      <a href="${s.ctaUrl || "#"}"
+         style="display:inline-block;padding:12px 18px;border-radius:10px;text-decoration:none;
+                background:${
+                  s.accent || "#2d89ef"
+                };color:#fff;font-weight:700"> ${s.ctaText || "Start free"} </a>
+      <form onsubmit="return false" style="margin-top:18px;display:grid;gap:10px">
+        <h3 style="margin:0 0 6px">${s.leadTitle || "Stay updated"}</h3>
+        <input placeholder="Full name" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
+        <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
+        <button type="submit"
+         style="padding:10px 14px;border:none;border-radius:10px;background:${
+           s.accent || "#2d89ef"
+         };color:#fff;font-weight:700;cursor:pointer">
+          ${s.leadBtn || "Sign Up"}
+        </button>
+      </form>
+    </div>
+  `;
+}
+
+/* --------------------------------- Main render -------------------------------- */
 export function renderDashboard(username) {
   loadStyle("./styles/main.css");
 
@@ -23,167 +164,114 @@ export function renderDashboard(username) {
 
   const header = renderHeader(
     username,
-    function (key) {
-      if (key === "dashboard") {
-        renderDashboard(username);
-      } else if (key === "banners") {
-        renderBannerEditor(username);
-      } else if (key === "marketing") {
-        renderMarketingPage(username);
-      } else if (key === "landing") {
-        renderLandingPage(username);
-      } else {
-        console.warn("Unknown page:", key);
+    (key) => {
+      switch (key) {
+        case "dashboard":
+          renderDashboard(username);
+          break;
+        case "banners":
+          renderBannerEditor(username);
+          break;
+        case "marketing":
+          renderMarketingPage(username);
+          break;
+        case "landing":
+          renderLandingPage(username);
+          break;
       }
     },
-    function () {
+    () => {
       clearLoggedInUser();
       renderLogin();
     }
   );
 
-  const container = document.createElement("div");
-  container.className = "dashboard-container";
-
-  // helper: close button
-  function makeCloseButton(onClick) {
-    const btn = document.createElement("button");
-    btn.className = "card-close";
-    btn.textContent = "×";
-    btn.title = "Delete";
-    btn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      onClick();
-    });
-    return btn;
-  }
+  const container = el("div", "dashboard-container");
 
   // Overview
-  const overview = document.createElement("div");
-  overview.className = "dashboard-card";
+  const overview = el("div", "dashboard-card");
+  const h1 = el("h1", "", `Welcome, ${username}!`);
+  const live = getActiveBanners();
+  const liveCount =
+    Object.keys(live).length +
+    (isMarketingActive() ? 1 : 0) +
+    (isLandingActive() ? 1 : 0);
 
-  const title = document.createElement("h1");
-  title.textContent = "Welcome, " + username + "!";
+  const p = el("p", "", `You have ${liveCount} live items.`);
+  const btn = el("button", "", "Create New Campaign");
+  btn.addEventListener("click", () => renderBannerEditor(username));
+  overview.append(h1, p, btn);
 
-  const active = getActiveBanners();
-  const hasMarketing = isMarketingActive();
-  const hasLanding = isLandingActive();
+  // Section: Live campaigns
+  const section = el("section", "live-section");
+  const title = el("h2", "", "Live campaigns");
+  const grid = el("div", "dashboard-grid");
+  section.append(title, grid);
 
-  const counters = document.createElement("p");
-  let count = Object.keys(active).length;
-  if (hasMarketing) count += 1;
-  if (hasLanding) count += 1;
+  container.append(overview, section);
+  app.append(header, container);
 
-  if (count > 0) {
-    if (count === 1) {
-      counters.textContent = "You have 1 live item.";
-    } else {
-      counters.textContent = "You have " + count + " live items.";
-    }
-  } else {
-    counters.textContent = "No live items yet. Create your first one:";
-  }
+  /* --------- BANNERS --------- */
+  const activeBanners = getActiveBanners();
+  Object.entries(activeBanners).forEach(([size, data]) => {
+    const { w, h } = parseSize(size);
+    const { wrapper, inner, finalizeHeight } = makeScaledBox(w, h);
+    renderBannerInner(inner, data, w, h);
+    finalizeHeight();
 
-  const createBtn = document.createElement("button");
-  createBtn.textContent = "Create New Campaign";
-  createBtn.addEventListener("click", function () {
-    renderBannerEditor(username);
+    const card = el("div", "live-card");
+    const h3 = el("h3", "", `Banner ${size} • LIVE`);
+    const close = el("button", "card-close", "×");
+    close.title = "Unpublish";
+    close.addEventListener("click", () => {
+      setBannerActive(size, false);
+      showToastLocal("Banner unpublished", "warn");
+      renderDashboard(username);
+    });
+
+    card.append(close, h3, wrapper);
+    grid.appendChild(card);
   });
 
-  overview.append(title, counters, createBtn);
-  container.appendChild(overview);
+  /* --------- MARKETING EMAIL --------- */
+  if (isMarketingActive()) {
+    const s = getMarketingPage() || {};
+    const { wrapper, inner, finalizeHeight } = makeScaledBox(650, 300);
+    renderEmailInner(inner, s);
+    finalizeHeight();
 
-  // Grid of cards
-  const grid = document.createElement("div");
-  grid.className = "dashboard-grid";
-
-  // banner 250x250
-  const b250 = getBanner("250x250");
-  if (b250) {
-    const card = document.createElement("div");
-    card.className = "dashboard-card";
-
-    const h = document.createElement("h3");
-    h.textContent = "Banner 250×250" + (b250.active ? " • LIVE" : "");
-
-    const frame = document.createElement("div");
-    frame.className = "dashboard-banner-frame";
-    frame.style.width = "250px";
-    frame.style.height = "250px";
-    if (b250.bg) {
-      frame.style.background = b250.bg;
-    } else {
-      frame.style.background = "#fff";
-    }
-
-    const close = makeCloseButton(function () {
-      deleteBanner("250x250");
+    const card = el("div", "live-card");
+    const h3 = el("h3", "", "Marketing Email • LIVE");
+    const close = el("button", "card-close", "×");
+    close.title = "Unpublish";
+    close.addEventListener("click", () => {
+      setMarketingActive(false);
+      showToastLocal("Email unpublished", "warn");
       renderDashboard(username);
     });
 
-    card.append(close, h, frame);
+    card.append(close, h3, wrapper);
     grid.appendChild(card);
   }
 
-  // banner 300x600
-  const b300 = getBanner("300x600");
-  if (b300) {
-    const card = document.createElement("div");
-    card.className = "dashboard-card";
+  /* --------- LANDING PAGE --------- */
+  if (isLandingActive()) {
+    const s = getLandingPage() || {};
+    const { wrapper, inner, finalizeHeight } = makeScaledBox(650, 420);
+    renderLandingInner(inner, s);
+    finalizeHeight();
 
-    const h = document.createElement("h3");
-    h.textContent = "Banner 300×600" + (b300.active ? " • LIVE" : "");
-
-    const frame = document.createElement("div");
-    frame.className = "dashboard-banner-frame";
-    frame.style.width = "300px";
-    frame.style.height = "600px";
-    if (b300.bg) {
-      frame.style.background = b300.bg;
-    } else {
-      frame.style.background = "#fff";
-    }
-
-    const close = makeCloseButton(function () {
-      deleteBanner("300x600");
+    const card = el("div", "live-card");
+    const h3 = el("h3", "", "Landing Page • LIVE");
+    const close = el("button", "card-close", "×");
+    close.title = "Unpublish";
+    close.addEventListener("click", () => {
+      setLandingActive(false);
+      showToastLocal("Landing unpublished", "warn");
       renderDashboard(username);
     });
 
-    card.append(close, h, frame);
+    card.append(close, h3, wrapper);
     grid.appendChild(card);
   }
-
-  // marketing card
-  if (hasMarketing) {
-    const card = document.createElement("div");
-    card.className = "dashboard-card";
-    const h = document.createElement("h3");
-    h.textContent = "Marketing Email • LIVE";
-    const close = makeCloseButton(function () {
-      clearMarketingPage();
-      renderDashboard(username);
-    });
-    card.append(close, h);
-    grid.appendChild(card);
-  }
-
-  // landing card
-  if (hasLanding) {
-    const card = document.createElement("div");
-    card.className = "dashboard-card";
-    const h = document.createElement("h3");
-    h.textContent = "Landing Page • LIVE";
-    const close = makeCloseButton(function () {
-      clearLandingPage();
-      renderDashboard(username);
-    });
-    card.append(close, h);
-    grid.appendChild(card);
-  }
-
-  if (grid.children.length > 0) {
-    container.appendChild(grid);
-  }
-
-  app.append(header, container);
 }
