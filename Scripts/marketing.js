@@ -1,4 +1,4 @@
-import { loadStyle, showToast, el } from "./utils.js";
+import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
@@ -10,6 +10,14 @@ import {
   saveMarketingPage,
   setMarketingActive,
 } from "./storage.js";
+
+function toast(msg, warn = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (warn ? " warn" : "");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1600);
+}
 
 export function renderMarketingPage(username) {
   loadStyle("./styles/main.css");
@@ -42,12 +50,14 @@ export function renderMarketingPage(username) {
   );
   app.appendChild(header);
 
-  const shell = el("div", "marketing-container");
+  const container = document.createElement("div");
+  container.className = "marketing-container";
 
-  const controls = el("div", "panel");
+  const controls = document.createElement("div");
+  controls.className = "panel";
   controls.innerHTML = `
     <h2>Email Builder</h2>
-    <p style="opacity:.8;margin:6px 0 12px">650px רוחב קבוע · שמירה אוטומטית</p>
+    <p style="opacity:.85;margin:6px 0 12px">רוחב קבוע 650px · שמירה אוטומטית</p>
 
     <div class="marketing-editor">
       <div class="field">
@@ -59,43 +69,20 @@ export function renderMarketingPage(username) {
         </select>
       </div>
 
-      <div class="field"><label>Title</label>
-        <input id="title" placeholder="Your great headline"/>
-      </div>
+      <div class="field"><label>Title</label><input id="title" placeholder="Your great headline"/></div>
+      <div class="field"><label>Subtitle</label><input id="subtitle" placeholder="Sub headline goes here"/></div>
+      <div class="field"><label>Body</label><textarea id="body" placeholder="Body copy for your email. Keep it short and clear."></textarea></div>
 
-      <div class="field"><label>Subtitle</label>
-        <input id="subtitle" placeholder="Sub headline goes here"/>
-      </div>
+      <div class="field"><label>Image URL</label><input id="imgUrl" placeholder="https://..."/></div>
+      <div class="field"><label>Button text</label><input id="ctaText" placeholder="Learn more"/></div>
+      <div class="field"><label>Button URL</label><input id="ctaUrl" placeholder="https://example.com"/></div>
 
-      <div class="field"><label>Body</label>
-        <textarea id="body" placeholder="Body copy for your email. Keep it short and clear."></textarea>
-      </div>
+      <div class="field"><label>Background</label><input id="bg" type="color"/></div>
+      <div class="field"><label>Text color</label><input id="color" type="color"/></div>
+      <div class="field"><label>Accent color (button)</label><input id="accent" type="color"/></div>
 
-      <div class="field"><label>Image URL</label>
-        <input id="imgUrl" placeholder="https://…"/>
-      </div>
-
-      <div class="field"><label>Button text</label>
-        <input id="ctaText" placeholder="Learn more"/>
-      </div>
-
-      <div class="field"><label>Button URL</label>
-        <input id="ctaUrl" placeholder="https://example.com"/>
-      </div>
-
-      <div class="field"><label>Background</label>
-        <input id="bg" type="color"/>
-      </div>
-
-      <div class="field"><label>Text color</label>
-        <input id="color" type="color"/>
-      </div>
-
-      <div class="field"><label>Accent color (button)</label>
-        <input id="accent" type="color"/>
-      </div>
-
-      <div class="field"><label>Font family</label>
+      <div class="field">
+        <label>Font family</label>
         <select id="font">
           <option value="system-ui, -apple-system, Segoe UI, Roboto">System</option>
           <option value="Georgia, serif">Serif</option>
@@ -105,35 +92,37 @@ export function renderMarketingPage(username) {
       </div>
     </div>
 
-    <div class="form-actions">
-      <button id="go"    class="btn btn--primary" type="button">Go live</button>
-      <button id="reset" class="btn btn--ghost"   type="button">Reset</button>
+    <div class="actions form-actions">
+      <button id="go-live" class="btn btn--primary">Go live</button>
+      <button id="reset" class="btn btn--ghost">Reset</button>
     </div>
   `;
 
-  const preview = el("div", "panel");
+  const preview = document.createElement("div");
+  preview.className = "panel";
   preview.innerHTML = `
     <h3 style="margin-bottom:10px">Live Preview (650px)</h3>
-    <div class="email-canvas" id="email" aria-label="email preview"></div>
+    <div class="email-canvas placeholder-surface" id="email"></div>
   `;
 
-  shell.append(controls, preview);
-  app.appendChild(shell);
+  container.append(controls, preview);
+  app.appendChild(container);
 
-  // placeholders לדמו (לתצוגה בלבד)
-  const DEMO = {
+  // ===== State =====
+  const DEF = {
     tpl: "t1",
-    title: "Your great headline",
-    subtitle: "Sub headline goes here",
-    body: "Body copy for your email. Keep it short and clear.",
+    title: "",
+    subtitle: "",
+    body: "",
     imgUrl: "",
-    ctaText: "Learn more",
-    ctaUrl: "https://example.com",
-    bg: "#ffffff",
-    color: "#333333",
-    accent: "#2d89ef",
+    ctaText: "",
+    ctaUrl: "",
+    bg: "",
+    color: "",
+    accent: "",
     font: "system-ui, -apple-system, Segoe UI, Roboto",
   };
+  const state = Object.assign({}, DEF, getMarketingPage() || {});
 
   const els = {
     tpl: controls.querySelector("#tpl"),
@@ -148,155 +137,124 @@ export function renderMarketingPage(username) {
     accent: controls.querySelector("#accent"),
     font: controls.querySelector("#font"),
     email: preview.querySelector("#email"),
-    go: controls.querySelector("#go"),
+    goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
   };
 
-  function readForm() {
-    return {
-      tpl: els.tpl.value,
-      title: els.title.value.trim(),
-      subtitle: els.subtitle.value.trim(),
-      body: els.body.value.trim(),
-      imgUrl: els.imgUrl.value.trim(),
-      ctaText: els.ctaText.value.trim(),
-      ctaUrl: els.ctaUrl.value.trim(),
-      bg: els.bg.value,
-      color: els.color.value,
-      accent: els.accent.value,
-      font: els.font.value,
-    };
+  // load values (ללא דחיפת "" לשדות הצבע)
+  Object.entries(state).forEach(([k, v]) => {
+    if (els[k] && v) els[k].value = v;
+  });
+
+  function emailHTML(s) {
+    const base = `
+      background:${s.bg || "transparent"}; color:${
+      s.color || "#333"
+    }; font-family:${s.font};
+      width:650px; margin:0 auto; line-height:1.5; padding:18px;
+    `;
+    const img = s.imgUrl
+      ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
+      : "";
+    const btn = (text, url) => `<a href="${url || "#"}"
+      style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
+             background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">${
+      text || "Button"
+    }</a>`;
+
+    if (s.tpl === "t2") {
+      return `<div style="${base}">
+        <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
+          ${
+            img ||
+            `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
+          }
+        </div>
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+      </div>`;
+    }
+    if (s.tpl === "t3") {
+      return `<div style="${base}">
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          ${img}
+          <h2 style="margin:0 0 8px">${s.title || ""}</h2>
+          <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+          <p style="margin:0 0 16px">${s.body || ""}</p>
+          ${btn(s.ctaText, s.ctaUrl)}
+        </div>
+      </div>`;
+    }
+    return `<div style="${base}">
+      <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+      ${img}
+      <p style="margin:0 0 16px">${s.body || ""}</p>
+      ${btn(s.ctaText, s.ctaUrl)}
+    </div>`;
   }
 
   function render() {
-    const s = readForm();
-    const v = {
-      tpl: s.tpl || DEMO.tpl,
-      title: s.title || DEMO.title,
-      subtitle: s.subtitle || DEMO.subtitle,
-      body: s.body || DEMO.body,
-      imgUrl: s.imgUrl || "",
-      ctaText: s.ctaText || DEMO.ctaText,
-      ctaUrl: s.ctaUrl || DEMO.ctaUrl,
-      bg: s.bg || DEMO.bg,
-      color: s.color || DEMO.color,
-      accent: s.accent || DEMO.accent,
-      font: s.font || DEMO.font,
-    };
-
-    const base = `
-      background:${v.bg}; color:${v.color}; font-family:${v.font};
-      width:650px; margin:0 auto; line-height:1.5;
-    `;
-    const btn = (text, url) => `
-      <a href="${url || "#"}"
-         style="display:inline-block;padding:10px 16px;border-radius:8px;
-                text-decoration:none;background:${
-                  v.accent
-                };color:#fff;font-weight:600">
-        ${text || "Button"}
-      </a>`;
-    const img = v.imgUrl
-      ? `<img src="${v.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
-      : "";
-
-    let html = "";
-    if (v.tpl === "t2") {
-      html = `
-        <div style="${base}">
-          <div style="padding:0 0 14px;text-align:center;background:rgba(0,0,0,.03);border-radius:8px;">
-            ${
-              img ||
-              `<div style="height:180px;display:grid;place-items:center;color:#888">Hero</div>`
-            }
-          </div>
-          <div style="padding:18px;">
-            <h1 style="margin:0 0 8px">${v.title}</h1>
-            <p style="margin:0 0 16px">${v.body}</p>
-            ${btn(v.ctaText, v.ctaUrl)}
-          </div>
-        </div>`;
-    } else if (v.tpl === "t3") {
-      html = `
-        <div style="${base} padding:18px;">
-          <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-            ${img}
-            <h2 style="margin:0 0 8px">${v.title}</h2>
-            <p style="margin:0 0 14px;opacity:.9">${v.subtitle}</p>
-            <p style="margin:0 0 16px">${v.body}</p>
-            ${btn(v.ctaText, v.ctaUrl)}
-          </div>
-        </div>`;
-    } else {
-      html = `
-        <div style="${base} padding:18px;">
-          <h1 style="margin:0 0 8px">${v.title}</h1>
-          <h3 style="margin:0 0 14px;opacity:.85">${v.subtitle}</h3>
-          ${img}
-          <p style="margin:0 0 16px">${v.body}</p>
-          ${btn(v.ctaText, v.ctaUrl)}
-        </div>`;
-    }
-
-    els.email.innerHTML = html;
+    if (state.bg) els.email.classList.remove("placeholder-surface");
+    else els.email.classList.add("placeholder-surface");
+    els.email.innerHTML = emailHTML(state);
+  }
+  function persist() {
+    saveMarketingPage(state);
   }
 
-  function persist(active = false) {
-    const data = { ...readForm() };
-    if (active) data.active = true;
-    saveMarketingPage(data);
-  }
-
-  function resetForm() {
-    ["title", "subtitle", "body", "imgUrl", "ctaText", "ctaUrl"].forEach(
-      (id) => (els[id].value = "")
-    );
-    els.bg.value = "";
-    els.color.value = "";
-    els.accent.value = "";
-    // font/tpl נשארים
-    render();
-  }
-
-  // טעינה של שמור קיים — לא ממלא לשדות טקסט אם ריקים (כדי לשמר placeholder)
-  const saved = getMarketingPage() || {};
-  els.tpl.value = saved.tpl || "t1";
-  els.font.value = saved.font || DEMO.font;
-  els.bg.value = saved.bg || "";
-  els.color.value = saved.color || "";
-  els.accent.value = saved.accent || "";
-  // השדות הטקסטואליים נשארים ריקים כברירת מחדל
-  render();
-
-  // אירועים
-  [
-    "tpl",
-    "title",
-    "subtitle",
-    "body",
-    "imgUrl",
-    "ctaText",
-    "ctaUrl",
-    "bg",
-    "color",
-    "accent",
-    "font",
-  ].forEach((k) =>
+  // inputs
+  Object.keys(state).forEach((k) => {
+    if (!els[k]) return;
     els[k].addEventListener("input", () => {
-      persist(false);
+      state[k] = els[k].value;
       render();
-    })
-  );
-
-  els.go.addEventListener("click", () => {
-    persist(true);
-    setMarketingActive(true);
-    showToast("Published email");
-    resetForm();
+      persist();
+      toast("Saved");
+    });
   });
 
   els.reset.addEventListener("click", () => {
-    resetForm();
-    showToast("Reset");
+    Object.assign(state, { ...DEF, font: state.font || DEF.font });
+    Object.keys(state).forEach((k) => {
+      if (!els[k]) return;
+      if (k === "bg" || k === "color" || k === "accent") {
+        // משאירים את ערך ה-input כמו שהוא אם ה-state ריק
+        if (state[k]) els[k].value = state[k];
+      } else {
+        els[k].value = state[k] || "";
+      }
+    });
+    render();
+    persist();
+    toast("Reset");
   });
+
+  els.goLive.addEventListener("click", () => {
+    state.active = true;
+    saveMarketingPage(state);
+    setMarketingActive(true);
+    toast("Published");
+
+    // איפוס לוגי בלבד; לא כותבים "" לשדות color
+    [
+      "title",
+      "subtitle",
+      "body",
+      "imgUrl",
+      "ctaText",
+      "ctaUrl",
+      "bg",
+      "color",
+      "accent",
+    ].forEach((k) => {
+      state[k] = "";
+      if (els[k] && !(k === "bg" || k === "color" || k === "accent"))
+        els[k].value = "";
+    });
+    render();
+  });
+
+  render();
 }

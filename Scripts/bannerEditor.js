@@ -1,4 +1,4 @@
-import { loadStyle, showToast, el } from "./utils.js";
+import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
@@ -8,8 +8,18 @@ import {
   clearLoggedInUser,
   getBanner,
   saveBanner,
+  resetBanner,
+  resetAllBanners,
   setBannerActive,
 } from "./storage.js";
+
+function toast(msg, warn = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (warn ? " warn" : "");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1600);
+}
 
 export function renderBannerEditor(username) {
   loadStyle("./styles/main.css");
@@ -17,7 +27,6 @@ export function renderBannerEditor(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header
   const header = renderHeader(
     username,
     (key) => {
@@ -43,12 +52,15 @@ export function renderBannerEditor(username) {
   );
   app.appendChild(header);
 
-  // Layout
-  const shell = el("div", "banner-editor-container");
+  // ===== Layout =====
+  const container = document.createElement("div");
+  container.className = "banner-editor-container";
 
-  const form = el("div", "panel controls");
-  form.innerHTML = `
+  const controls = document.createElement("div");
+  controls.className = "panel controls";
+  controls.innerHTML = `
     <h2>Banner Editor</h2>
+
     <div class="field">
       <label>Size</label>
       <select id="size">
@@ -66,197 +78,177 @@ export function renderBannerEditor(username) {
       </select>
     </div>
 
-    <div class="field">
-      <label>Headline</label>
-      <input id="title" placeholder="POP-UP"/>
-    </div>
+    <div class="field"><label>Headline</label>
+      <input id="title" placeholder="POP-UP"/></div>
 
-    <div class="field">
-      <label>Subtitle / Date</label>
-      <input id="subtitle" placeholder="sale"/>
-    </div>
+    <div class="field"><label>Subtitle / Date</label>
+      <input id="subtitle" placeholder="sale or date"/></div>
 
-    <div class="field">
-      <label>Body (short)</label>
-      <textarea id="body" placeholder="SUNDAY, MARCH 23 2025"></textarea>
-    </div>
+    <div class="field"><label>Body (short)</label>
+      <textarea id="body" placeholder="SUNDAY, MARCH 23 2025"></textarea></div>
 
-    <div class="field">
-      <label>Background</label>
-      <input id="bg" type="color" />
-    </div>
+    <div class="field"><label>Background</label>
+      <input id="bg" type="color"/></div>
 
-    <div class="field">
-      <label>Text Color</label>
-      <input id="color" type="color" />
-    </div>
+    <div class="field"><label>Text Color</label>
+      <input id="color" type="color"/></div>
 
-    <div class="field">
-      <label>Font Size (px)</label>
-      <input id="fontSize" type="number" min="12" max="64" placeholder="22"/>
-    </div>
+    <div class="field"><label>Font Size (px)</label>
+      <input id="fontSize" type="number" min="12" max="64" placeholder="22"/></div>
 
-    <div class="form-actions">
-      <button id="go"    class="btn btn--primary" type="button">Go live</button>
-      <button id="reset" class="btn btn--ghost"   type="button">Reset</button>
+    <div class="actions form-actions">
+      <button id="go-live" class="btn btn--primary" type="button">Go live</button>
+      <button id="reset" class="btn btn--ghost" type="button">Reset</button>
     </div>
   `;
 
-  const preview = el("div", "panel preview");
+  const preview = document.createElement("div");
+  preview.className = "panel preview";
   preview.innerHTML = `
     <h3>Live Preview</h3>
-    <div class="banner-frame" id="frame" style="width:250px;height:250px">
-      <div id="canvas" class="banner-canvas"></div>
+    <div class="banner-frames">
+      <div class="banner-frame">
+        <div id="prev" class="banner-content tpl placeholder-surface"
+             style="width:250px;height:250px"></div>
+      </div>
     </div>
   `;
 
-  shell.append(form, preview);
-  app.appendChild(shell);
+  container.append(controls, preview);
+  app.appendChild(container);
 
-  // ---- Refs & helpers ----
+  // ===== Refs =====
   const els = {
-    size: form.querySelector("#size"),
-    tpl: form.querySelector("#template"),
-    title: form.querySelector("#title"),
-    subtitle: form.querySelector("#subtitle"),
-    body: form.querySelector("#body"),
-    bg: form.querySelector("#bg"),
-    color: form.querySelector("#color"),
-    fontSize: form.querySelector("#fontSize"),
-    go: form.querySelector("#go"),
-    reset: form.querySelector("#reset"),
-    frame: preview.querySelector("#frame"),
-    canvas: preview.querySelector("#canvas"),
+    size: controls.querySelector("#size"),
+    template: controls.querySelector("#template"),
+    title: controls.querySelector("#title"),
+    subtitle: controls.querySelector("#subtitle"),
+    body: controls.querySelector("#body"),
+    bg: controls.querySelector("#bg"),
+    color: controls.querySelector("#color"),
+    fontSize: controls.querySelector("#fontSize"),
+    goLive: controls.querySelector("#go-live"),
+    reset: controls.querySelector("#reset"),
+    prev: preview.querySelector("#prev"),
   };
 
-  // Placeholder demo values for preview (לא נכתבים לשדות)
-  const DEMO = {
-    title: "POP-UP",
-    subtitle: "sale",
-    body: "SUNDAY, MARCH 23 2025",
-    color: "#333333",
-    bg: "#E7C282",
-    fontSize: 22,
-  };
-
-  function readForm() {
+  // helpers
+  function collectCurrent() {
     return {
-      template: els.tpl.value,
+      template: els.template.value,
       title: els.title.value.trim(),
       subtitle: els.subtitle.value.trim(),
       body: els.body.value.trim(),
-      bg: els.bg.value, // ריק אם המשתמש לא בחר
-      color: els.color.value, // ריק אם המשתמש לא בחר
-      fontSize: Number(els.fontSize.value) || null,
+      bg: els.bg.value || "",
+      color: els.color.value || "",
+      fontSize: Number(els.fontSize.value) || 22,
+      updatedAt: Date.now(),
     };
   }
 
-  function render() {
-    const s = readForm();
-
-    // ערכים לתצוגה (נופלים ל-DEMO כשהשדה ריק)
-    const v = {
-      title: s.title || DEMO.title,
-      subtitle: s.subtitle || DEMO.subtitle,
-      body: s.body || DEMO.body,
-      color: s.color || DEMO.color,
-      fontSize: s.fontSize || DEMO.fontSize,
-      bg: s.bg || null,
-    };
-
-    // גודל הפריים לפי הבחירה
-    if (els.size.value === "250x250") {
-      els.frame.style.width = "250px";
-      els.frame.style.height = "250px";
+  function setPrevSize(size) {
+    if (size === "300x600") {
+      els.prev.style.width = "300px";
+      els.prev.style.height = "600px";
     } else {
-      els.frame.style.width = "300px";
-      els.frame.style.height = "600px";
+      els.prev.style.width = "250px";
+      els.prev.style.height = "250px";
     }
-
-    // רקע placeholder מפוספס אם אין טקסט בכלל
-    const isEmptyText = !s.title && !s.subtitle && !s.body;
-    if (isEmptyText && !s.bg) {
-      els.canvas.style.background = `repeating-linear-gradient(
-        135deg, rgba(0,0,0,.06) 0 8px, rgba(0,0,0,.02) 8px 16px
-      )`;
-    } else {
-      els.canvas.style.background = v.bg ? v.bg : "#fff";
-    }
-
-    els.canvas.style.color = v.color;
-    els.canvas.style.fontSize = v.fontSize + "px";
-    els.canvas.innerHTML = `
-      <div class="b-title">${v.title}</div>
-      <div class="b-sub">${v.subtitle}</div>
-      <div class="b-body">${v.body}</div>
-    `;
   }
 
-  function save(active = false) {
-    const s = readForm();
-    saveBanner(els.size.value, {
-      ...s,
-      active,
-    });
-  }
-
-  function resetForm() {
-    els.title.value = "";
-    els.subtitle.value = "";
-    els.body.value = "";
-    els.bg.value = "";
-    els.color.value = "";
-    els.fontSize.value = "";
-    render();
-  }
-
-  // טעינת שמור קיים (אם יש)
-  const existing250 = getBanner("250x250");
-  const existing300 = getBanner("300x600");
-  function loadForCurrentSize() {
-    const size = els.size.value;
+  function loadFor(size) {
+    setPrevSize(size);
     const s = getBanner(size) || {};
-    els.tpl.value = s.template || "t1";
+    els.template.value = s.template || "t1";
     els.title.value = s.title || "";
     els.subtitle.value = s.subtitle || "";
     els.body.value = s.body || "";
-    els.bg.value = s.bg || "";
-    els.color.value = s.color || "";
-    els.fontSize.value = s.fontSize || "";
+    if (s.bg) els.bg.value = s.bg; // לא דוחפים ריק
+    if (s.color) els.color.value = s.color; // לא דוחפים ריק
+    if (s.fontSize) els.fontSize.value = s.fontSize;
     render();
   }
-  loadForCurrentSize();
+
+  function applyToPreview(el, s) {
+    if (s.bg) {
+      el.classList.remove("placeholder-surface");
+      el.style.background = s.bg;
+    } else {
+      el.classList.add("placeholder-surface");
+      el.style.background = "transparent";
+    }
+    el.style.color = s.color || "#333";
+    el.style.fontSize = (s.fontSize || 22) + "px";
+    el.style.display = "grid";
+    el.style.placeItems = "center";
+    el.style.textAlign = "center";
+    el.style.padding = "10px";
+
+    const title = s.title
+      ? `<div class="title"><strong>${s.title}</strong></div>`
+      : "";
+    const subtitle = s.subtitle
+      ? `<div class="subtitle" style="opacity:.9">${s.subtitle}</div>`
+      : "";
+    const body = s.body
+      ? `<div class="body" style="opacity:.95">${s.body}</div>`
+      : "";
+
+    el.innerHTML = `<div>${title}${subtitle}${body}</div>`;
+  }
+
+  function render() {
+    const s = getBanner(els.size.value) || collectCurrent();
+    applyToPreview(els.prev, s);
+  }
+
+  function persist() {
+    saveBanner(els.size.value, collectCurrent());
+  }
 
   // events
   [
-    els.size,
-    els.tpl,
+    els.template,
     els.title,
     els.subtitle,
     els.body,
     els.bg,
     els.color,
     els.fontSize,
-  ].forEach((n) =>
-    n.addEventListener("input", () => {
-      save(false);
+  ].forEach((inp) =>
+    inp.addEventListener("input", () => {
+      persist();
       render();
     })
   );
 
-  els.size.addEventListener("change", loadForCurrentSize);
-
-  els.go.addEventListener("click", () => {
-    save(true);
-    setBannerActive(els.size.value, true);
-    showToast("Published banner");
-    resetForm(); // איפוס הטופס אחרי פרסום
-  });
+  els.size.addEventListener("change", () => loadFor(els.size.value));
 
   els.reset.addEventListener("click", () => {
-    resetForm();
-    showToast("Reset");
+    resetBanner(els.size.value);
+    loadFor(els.size.value);
+    toast("Reset");
   });
 
-  render();
+  els.goLive.addEventListener("click", () => {
+    const size = els.size.value;
+    const payload = collectCurrent();
+    payload.active = true;
+    saveBanner(size, payload);
+    setBannerActive(size, true);
+    toast("Published");
+
+    // “איפוס” בלי לכתוב ריק לשדות צבע:
+    els.title.value = "";
+    els.subtitle.value = "";
+    els.body.value = "";
+    els.fontSize.value = "";
+
+    // מעבר אוטומטי לגודל השני
+    els.size.value = size === "250x250" ? "300x600" : "250x250";
+    loadFor(els.size.value);
+  });
+
+  // init
+  loadFor(els.size.value);
 }

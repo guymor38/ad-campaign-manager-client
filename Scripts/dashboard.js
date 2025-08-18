@@ -1,4 +1,3 @@
-// dashboard.js
 import { loadStyle } from "./utils.js";
 import { renderLogin } from "./login.js";
 import { renderHeader } from "./header.js";
@@ -7,155 +6,22 @@ import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
 import {
   clearLoggedInUser,
-
-  // banners
-  getActiveBanners,
-  setBannerActive,
-
-  // marketing email
-  isMarketingActive,
+  getBanners,
   getMarketingPage,
-  setMarketingActive,
-
-  // landing page
-  isLandingActive,
   getLandingPage,
+  setBannerActive,
+  setMarketingActive,
   setLandingActive,
 } from "./storage.js";
 
-/* -------- helpers (לוקאליים כדי שלא נהיה תלויים בכלי עזר חיצוניים) -------- */
-function el(tag, className, text) {
-  const n = document.createElement(tag);
-  if (className) n.className = className;
-  if (text !== undefined) n.textContent = text;
-  return n;
-}
-function parseSize(size) {
-  const [w, h] = size.split("x").map((n) => parseInt(n, 10));
-  return { w: w || 250, h: h || 250 };
-}
-
-// fallback קטן אם אין showToast ב-utils
-function showToastLocal(msg, type) {
-  if (window.showToast) {
-    window.showToast(msg, type);
-    return;
-  }
-  const t = el("div", "toast");
-  if (type === "warn") t.classList.add("warn");
+function toast(msg, warn = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (warn ? " warn" : "");
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 1800);
+  setTimeout(() => t.remove(), 1600);
 }
 
-/* -------------- ממוזערת עם scale – קובעים גובה סופי רק אחרי התוכן -------------- */
-function makeScaledBox(baseW, baseH) {
-  const wrapper = el("div", "snapshot"); // המסגרת החיצונית
-  const thumbW = 300; // רוחב ממוזערת
-  const scale = thumbW / baseW;
-
-  wrapper.style.width = thumbW + "px"; // את הגובה נשלים אחרי התוכן
-
-  const inner = el("div", "scale-inner"); // הקנבס הפנימי לפני scale
-  inner.style.width = baseW + "px";
-  inner.style.height = baseH + "px";
-  inner.style.transform = `scale(${scale})`;
-  inner.style.transformOrigin = "top left";
-
-  wrapper.appendChild(inner);
-
-  function finalizeHeight() {
-    // מדידה אחרי שהכנסנו תוכן (כולל scale)
-    const r = inner.getBoundingClientRect();
-    wrapper.style.height = r.height + "px"; // לא מכפילים שוב
-  }
-
-  return { wrapper, inner, finalizeHeight };
-}
-
-/* --------------------- רינדור תוכן לממוזערות (פשוט/ייצוגי) --------------------- */
-function renderBannerInner(root, data, w, h) {
-  root.innerHTML = "";
-  root.style.cssText = `
-    background: ${
-      data?.bg ||
-      "repeating-linear-gradient(45deg,#eee,#eee 10px,#f7f7f7 10px,#f7f7f7 20px)"
-    };
-    color: ${data?.color || "#333"};
-    width:${w}px; height:${h}px;
-    display:grid; place-items:center; text-align:center; padding:10px; box-sizing:border-box;
-    font-family: Georgia, serif;
-  `;
-  const title = el("div", "snap-title", data?.title || "Headline");
-  title.style.fontWeight = "700";
-  const sub = el("div", "snap-sub", data?.subtitle || "Subtitle");
-  sub.style.opacity = ".85";
-  const body = el("div", "snap-body", data?.body || "Body");
-  body.style.fontSize = "12px";
-  root.append(title, sub, body);
-}
-
-function renderEmailInner(root, s) {
-  root.innerHTML = `
-    <div style="
-      width:650px; box-sizing:border-box; padding:18px;
-      background:${s.bg || "#fff"}; color:${s.color || "#333"};
-      font-family:${s.font || "system-ui,-apple-system,Segoe UI,Roboto"};
-      line-height:1.5;">
-      <h1 style="margin:0 0 8px">${s.title || "Your great headline"}</h1>
-      <h3 style="margin:0 0 12px;opacity:.85">${
-        s.subtitle || "Sub headline goes here"
-      }</h3>
-      <p style="margin:0 0 16px">${
-        s.body || "Body copy for your email. Keep it short and clear."
-      }</p>
-      <a href="${s.ctaUrl || "#"}"
-         style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
-                background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
-        ${s.ctaText || "Learn more"}
-      </a>
-    </div>
-  `;
-}
-
-function renderLandingInner(root, s) {
-  root.innerHTML = `
-    <div style="
-      width:650px; box-sizing:border-box; padding:18px;
-      background:${s.bg || "#fff"}; color:${s.color || "#333"};
-      font-family:${s.font || "system-ui,-apple-system,Segoe UI,Roboto"};
-      line-height:1.5;">
-      <h1 style="margin:0 0 8px">${
-        s.title || "Bannerist helps you launch faster"
-      }</h1>
-      <h3 style="margin:0 0 12px;opacity:.85">${
-        s.subtitle || "Create and manage ads, emails & landings in minutes."
-      }</h3>
-      <p style="margin:0 0 16px">${
-        s.body ||
-        "Design quickly, preview instantly, and save your work locally."
-      }</p>
-      <a href="${s.ctaUrl || "#"}"
-         style="display:inline-block;padding:12px 18px;border-radius:10px;text-decoration:none;
-                background:${
-                  s.accent || "#2d89ef"
-                };color:#fff;font-weight:700"> ${s.ctaText || "Start free"} </a>
-      <form onsubmit="return false" style="margin-top:18px;display:grid;gap:10px">
-        <h3 style="margin:0 0 6px">${s.leadTitle || "Stay updated"}</h3>
-        <input placeholder="Full name" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
-        <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
-        <button type="submit"
-         style="padding:10px 14px;border:none;border-radius:10px;background:${
-           s.accent || "#2d89ef"
-         };color:#fff;font-weight:700;cursor:pointer">
-          ${s.leadBtn || "Sign Up"}
-        </button>
-      </form>
-    </div>
-  `;
-}
-
-/* --------------------------------- Main render -------------------------------- */
 export function renderDashboard(username) {
   loadStyle("./styles/main.css");
 
@@ -186,92 +52,258 @@ export function renderDashboard(username) {
     }
   );
 
-  const container = el("div", "dashboard-container");
+  const container = document.createElement("div");
+  container.className = "dashboard-container";
 
-  // Overview
-  const overview = el("div", "dashboard-card");
-  const h1 = el("h1", "", `Welcome, ${username}!`);
-  const live = getActiveBanners();
-  const liveCount =
-    Object.keys(live).length +
-    (isMarketingActive() ? 1 : 0) +
-    (isLandingActive() ? 1 : 0);
-
-  const p = el("p", "", `You have ${liveCount} live items.`);
-  const btn = el("button", "", "Create New Campaign");
-  btn.addEventListener("click", () => renderBannerEditor(username));
-  overview.append(h1, p, btn);
-
-  // Section: Live campaigns
-  const section = el("section", "live-section");
-  const title = el("h2", "", "Live campaigns");
-  const grid = el("div", "dashboard-grid");
-  section.append(title, grid);
-
-  container.append(overview, section);
-  app.append(header, container);
-
-  /* --------- BANNERS --------- */
-  const activeBanners = getActiveBanners();
-  Object.entries(activeBanners).forEach(([size, data]) => {
-    const { w, h } = parseSize(size);
-    const { wrapper, inner, finalizeHeight } = makeScaledBox(w, h);
-    renderBannerInner(inner, data, w, h);
-    finalizeHeight();
-
-    const card = el("div", "live-card");
-    const h3 = el("h3", "", `Banner ${size} • LIVE`);
-    const close = el("button", "card-close", "×");
-    close.title = "Unpublish";
-    close.addEventListener("click", () => {
-      setBannerActive(size, false);
-      showToastLocal("Banner unpublished", "warn");
-      renderDashboard(username);
-    });
-
-    card.append(close, h3, wrapper);
-    grid.appendChild(card);
+  // ===== HERO =====
+  const hero = document.createElement("section");
+  hero.className = "dash-hero";
+  hero.innerHTML = `
+    <h1 class="dash-logo">Bannerist</h1>
+    <p class="dash-tagline">
+      “Creating a great campaign doesn’t have to be so hard,<br/>
+      At Bannerist, we make it easy.”
+    </p>
+    <button class="dash-cta" id="cta-start">Start Now</button>
+  `;
+  hero.querySelector("#cta-start").addEventListener("click", () => {
+    renderBannerEditor(username);
   });
 
-  /* --------- MARKETING EMAIL --------- */
-  if (isMarketingActive()) {
-    const s = getMarketingPage() || {};
-    const { wrapper, inner, finalizeHeight } = makeScaledBox(650, 300);
-    renderEmailInner(inner, s);
-    finalizeHeight();
+  // ===== LIVE SECTION =====
+  const liveSection = document.createElement("section");
+  liveSection.className = "live-section";
+  liveSection.innerHTML = `
+    <h2>Active Campaigns</h2>
+    <div class="live-grid" id="live-grid"></div>
+  `;
 
-    const card = el("div", "live-card");
-    const h3 = el("h3", "", "Marketing Email • LIVE");
-    const close = el("button", "card-close", "×");
-    close.title = "Unpublish";
-    close.addEventListener("click", () => {
+  container.append(hero, liveSection);
+
+  const grid = liveSection.querySelector("#live-grid");
+
+  // ===== THUMB HELPERS =====
+  function makeTile(label, innerHTML, onRemove) {
+    const tile = document.createElement("div");
+    tile.className = "live-tile";
+    tile.innerHTML = `
+      <button class="tile-close" title="Remove from LIVE">×</button>
+      <div class="tile-thumb">${innerHTML}</div>
+      <div class="tile-caption">${label}</div>
+    `;
+    tile.querySelector(".tile-close").addEventListener("click", onRemove);
+    return tile;
+  }
+
+  function bannerThumbHTML(s, size) {
+    const [w, h] = size === "300x600" ? [300, 600] : [250, 250];
+    const bg = s.bg || "transparent";
+    const color = s.color || "#333";
+    const fs = (s.fontSize || 22) + "px";
+    const title = s.title
+      ? `<div style="font-weight:700">${s.title}</div>`
+      : "";
+    const subtitle = s.subtitle
+      ? `<div style="opacity:.9">${s.subtitle}</div>`
+      : "";
+    const body = s.body ? `<div style="opacity:.95">${s.body}</div>` : "";
+    const ph = !s.bg ? 'class="placeholder-surface"' : "";
+
+    return `
+      <div ${ph}
+           style="width:${w}px;height:${h}px;background:${bg};color:${color};
+                  display:grid;place-items:center;text-align:center;
+                  border:2px dashed #645774;border-radius:10px;padding:10px;
+                  font-size:${fs};line-height:1.25;
+                  word-break:break-word;overflow-wrap:anywhere;max-width:100%;">
+        <div>${title}${subtitle}${body}</div>
+      </div>`;
+  }
+
+  function emailThumbHTML(s) {
+    // 650px רוחב מקורי — סקל כדי להיכנס לריבוע 260px
+    const scale = 0.36;
+    const base = `
+      background:${s.bg || "transparent"}; color:${s.color || "#333"};
+      font-family:${s.font};
+      width:650px; line-height:1.5; padding:18px; background-clip:padding-box;
+      word-break:break-word; overflow-wrap:anywhere;
+    `;
+    const img = s.imgUrl
+      ? `<img src="${s.imgUrl}" alt=""
+           style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
+      : "";
+    const btn = (text, url) => `<a href="${url || "#"}"
+      style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
+             background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">${
+      text || "Button"
+    }</a>`;
+
+    let inner;
+    if (s.tpl === "t2") {
+      inner = `<div style="${base}">
+        <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
+          ${
+            img ||
+            `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
+          }
+        </div>
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+      </div>`;
+    } else if (s.tpl === "t3") {
+      inner = `<div style="${base}">
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          ${img}
+          <h2 style="margin:0 0 8px">${s.title || ""}</h2>
+          <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+          <p style="margin:0 0 16px">${s.body || ""}</p>
+          ${btn(s.ctaText, s.ctaUrl)}
+        </div>
+      </div>`;
+    } else {
+      inner = `<div style="${base}">
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+        ${img}
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+      </div>`;
+    }
+
+    return `<div style="transform:scale(${scale}); transform-origin: top left;
+                       width:650px; border:2px dashed #645774; border-radius:12px;
+                       background:#fff; overflow:hidden; padding:8px">
+              ${inner}
+            </div>`;
+  }
+
+  function landingThumbHTML(s) {
+    // 1000px רוחב מקורי — סקל כדי להיכנס לריבוע 260px
+    const scale = 0.24;
+    const shell = `
+      background:${s.bg || "transparent"}; color:${s.color || "#333"};
+      font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;
+      word-break:break-word; overflow-wrap:anywhere;
+    `;
+    const img = s.imgUrl
+      ? `<img src="${s.imgUrl}" alt=""
+           style="max-width:100%;display:block;margin:0 auto 14px;border-radius:12px"/>`
+      : "";
+    const btn = (text, url) =>
+      `<a href="${url || "#"}"
+         style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
+           s.accent || "#2d89ef"
+         };
+                color:#fff;text-decoration:none;font-weight:700">${
+                  text || "CTA"
+                }</a>`;
+    const leadForm = (title, btnText, accent) => `
+      <form onsubmit="return false" style="margin-top:16px; display:grid; gap:10px">
+        <h3 style="margin:0 0 6px">${title || ""}</h3>
+        <input placeholder="Full name" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
+        <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
+        <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${
+          accent || "#2d89ef"
+        };
+                color:#fff;font-weight:700;cursor:pointer">${
+                  btnText || "Submit"
+                }</button>
+      </form>`;
+
+    let inner;
+    if (s.tpl === "t2") {
+      inner = `<div style="${shell}">
+        <div style="background:rgba(0,0,0,.05);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px">
+          ${
+            img ||
+            `<div style="height:220px;display:grid;place-items:center;color:#888">Hero image</div>`
+          }
+        </div>
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+        ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+      </div>`;
+    } else if (s.tpl === "t3") {
+      inner = `<div style="${shell}">
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:18px">
+          <div>
+            <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+            <h3 style="margin:0 0 12px;opacity:.85">${s.subtitle || ""}</h3>
+            <p style="margin:0 0 16px">${s.body || ""}</p>
+            ${btn(s.ctaText, s.ctaUrl)}
+            ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+          </div>
+          <div>
+            ${
+              img ||
+              `<div style="height:260px;display:grid;place-items:center;color:#888;background:rgba(0,0,0,.05);border-radius:12px">Image</div>`
+            }
+          </div>
+        </div>
+      </div>`;
+    } else {
+      inner = `<div style="${shell}">
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+        ${img}
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+        ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+      </div>`;
+    }
+
+    return `<div style="transform:scale(${scale}); transform-origin: top left;
+                       width:1000px; border:2px dashed #645774; border-radius:12px;
+                       background:#fff; overflow:hidden; padding:8px">
+              ${inner}
+            </div>`;
+  }
+
+  // ===== ADD LIVE TILES =====
+  const allB = getBanners();
+  ["250x250", "300x600"].forEach((sz) => {
+    const s = allB[sz];
+    if (s && s.active) {
+      const tile = makeTile(`Banner ${sz}`, bannerThumbHTML(s, sz), () => {
+        setBannerActive(sz, false);
+        toast("Removed from LIVE");
+        renderDashboard(username);
+      });
+      grid.appendChild(tile);
+    }
+  });
+
+  const M = getMarketingPage();
+  if (M && M.active) {
+    const tile = makeTile("Marketing Email", emailThumbHTML(M), () => {
       setMarketingActive(false);
-      showToastLocal("Email unpublished", "warn");
+      toast("Removed from LIVE");
       renderDashboard(username);
     });
-
-    card.append(close, h3, wrapper);
-    grid.appendChild(card);
+    grid.appendChild(tile);
   }
 
-  /* --------- LANDING PAGE --------- */
-  if (isLandingActive()) {
-    const s = getLandingPage() || {};
-    const { wrapper, inner, finalizeHeight } = makeScaledBox(650, 420);
-    renderLandingInner(inner, s);
-    finalizeHeight();
-
-    const card = el("div", "live-card");
-    const h3 = el("h3", "", "Landing Page • LIVE");
-    const close = el("button", "card-close", "×");
-    close.title = "Unpublish";
-    close.addEventListener("click", () => {
+  const L = getLandingPage();
+  if (L && L.active) {
+    const tile = makeTile("Landing Page", landingThumbHTML(L), () => {
       setLandingActive(false);
-      showToastLocal("Landing unpublished", "warn");
+      toast("Removed from LIVE");
       renderDashboard(username);
     });
-
-    card.append(close, h3, wrapper);
-    grid.appendChild(card);
+    grid.appendChild(tile);
   }
+
+  // אין קמפיינים חיים?
+  if (!grid.children.length) {
+    const empty = document.createElement("p");
+    empty.className = "live-empty";
+    empty.textContent =
+      "No active campaigns yet. Click “Start Now” to create one.";
+    liveSection.appendChild(empty);
+  }
+
+  app.append(header, container);
 }

@@ -1,37 +1,44 @@
-/* ===== Header / Nav (GRID) ===== */
+/* header.css */
+
+/* ─── Bar ───────────────────────────────────────────────────────────────── */
 .header {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
+  padding: 12px 16px;
 
   display: grid;
-  grid-template-columns: auto 1fr; /* לוגו | ניווט */
+  grid-template-columns: auto 1fr auto; /* [logo+nav] | spacer | [avatar+logout] */
   align-items: center;
   gap: 16px;
 
-  padding: 12px 16px;
-  background: rgba(34, 28, 46, 0.45);
+  background: #2c2633; /* פס כהה, אלגנטי */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.header h2 {
+/* ─── Left cluster ──────────────────────────────────────────────────────── */
+.header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
   margin: 0;
   color: #80b9b1;
+  font-weight: 800;
   letter-spacing: 0.5px;
 }
 
-/* הניווט עצמו – Grid אופקי זורם */
+/* ─── Nav ──────────────────────────────────────────────────────────────── */
 .nav {
-  display: grid;
-  grid-auto-flow: column; /* פריסה בשורה */
-  grid-auto-columns: max-content; /* כל כפתור לפי תוכן */
-  gap: 8px;
-  justify-content: start;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.nav button,
-.nav .chip {
+.nav button {
   appearance: none;
   border: none;
   cursor: pointer;
@@ -48,20 +55,59 @@
   filter: brightness(0.95);
   transform: translateY(-1px);
 }
-.nav button.active {
-  outline: 2px solid #e9f5f3;
+.nav button:active {
+  transform: translateY(0);
 }
 
-/* מובייל: הניווט נהיה Grid בעמודות */
-@media (max-width: 700px) {
+/* ─── Right cluster (avatar + logout) ───────────────────────────────────── */
+.header__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-self: end;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff; /* עיגול לבן */
+  color: #1c1a26;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.btn {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px #514864;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: #80b9b1;
+  border: 2px solid #80b9b1;
+}
+.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
   .header {
-    grid-template-columns: 1fr;
-    justify-items: center;
+    grid-template-columns: 1fr auto; /* [logo+nav] | [avatar+logout] */
+    row-gap: 10px;
+  }
+  .header__left {
+    flex-wrap: wrap;
   }
   .nav {
-    grid-auto-flow: row;
-    grid-template-columns: repeat(2, minmax(0, max-content));
-    justify-content: center;
-    justify-items: center;
+    flex: 1 1 100%;
   }
 }

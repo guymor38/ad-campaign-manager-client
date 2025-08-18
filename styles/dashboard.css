@@ -1,124 +1,107 @@
-/* ===== Dashboard Layout ===== */
-.dashboard-container {
+/* ===== Base container ===== */
+.dashboard-container{
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px;
-  color: #80b9b1;
-
-  display: grid;
-  grid-template-columns: 1fr; /* עמודה אחת ל-Overview + רשת הבאנרים */
-  gap: 20px;
+  padding: 24px 24px 48px;
+  color: #fff;
 }
 
-/* כרטיס/פאנל כללי */
-.dashboard-card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 16px;
+/* ===== HERO ===== */
+.dash-hero{
+  text-align: center;
+  padding: clamp(24px, 5vw, 56px) 12px 40px;
 }
-
-/* כותרת ראשית */
-.dashboard-card h1 {
-  margin: 0 0 8px;
-  font-size: clamp(1.6rem, 2vw, 2rem);
-  color: #80b9b1;
-}
-
-/* טקסט כללי */
-.dashboard-card p {
+.dash-logo{
   margin: 0 0 12px;
-  line-height: 1.5;
-  opacity: 0.95;
+  font-size: clamp(2.2rem, 5.4vw, 4rem);
+  color: #80b9b1;
+  letter-spacing: .5px;
 }
-
-/* כפתור פעולה כללי בדשבורד */
-.dashboard-card button {
-  padding: 10px 16px;
+.dash-tagline{
+  margin: 0 auto 20px;
+  max-width: 840px;
+  font-size: clamp(1.05rem, 2.1vw, 1.7rem);
+  line-height: 1.35;
+  opacity: .95;
+}
+.dash-cta{
+  padding: 12px 18px;
   border: none;
-  border-radius: 10px;
-  background: #80b9b1; /* תכלת-ירקרק */
+  border-radius: 12px;
+  background: #80b9b1;
   color: #fff;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 2px 2px 4px #645774;
-  transition: filter 0.15s ease-in-out;
+  transition: transform .1s ease, filter .15s ease;
 }
-.dashboard-card button:hover {
-  filter: brightness(0.95);
-}
+.dash-cta:hover{ filter: brightness(.95); transform: translateY(-1px); }
 
-/* ===== כותרת הסקשן ===== */
-.live-section h2 {
-  margin: 0 0 8px;
-  font-size: 1.3rem;
-  color: #80b9b1;
-}
-
-/* ===== רשת תצוגות הבאנרים/מייל/לנדינג ===== */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(320px, 1fr)
-  ); /* 3 בעמודה כשאפשר */
-  gap: 20px;
-}
-
-/* כרטיס חי */
-.live-card {
-  position: relative;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 12px;
-}
-
-/* כותרת כרטיס */
-.live-card h3 {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-  color: #80b9b1;
-}
-
-/* כפתור סגירה קטן (Unpublish) */
-.card-close {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 8px;
-  background: #80b9b1;
+/* ===== Live Section ===== */
+.live-section h2{
+  margin: 0 0 18px;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
   color: #fff;
+}
+.live-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+  overflow-x: hidden; /* אין גלילת צד */
+}
+@media (max-width: 1050px){
+  .live-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+}
+@media (max-width: 680px){
+  .live-grid{ grid-template-columns: 1fr; gap: 22px; }
+}
+.live-empty{ opacity:.8; margin-top: 4px; }
+
+/* ===== Tile ===== */
+.live-tile{
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+.tile-thumb{
+  width: 260px;
+  height: 260px;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  overflow: hidden;                 /* מונע פריצה מהאריח */
+}
+.tile-caption{
+  text-align: center;
+  font-weight: 600;
+  color: #80b9b1;
+  opacity: .95;
+}
+
+/* שם הכפתור להסרה */
+.tile-close{
+  position: absolute;
+  margin: 0;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
-  box-shadow: 1px 1px 2px #645774;
+  background: #80b9b1; color: #fff; font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  transform: translate(-6px, -6px);
 }
+.live-tile{ position: relative; } /* עבור הכפתור */
+.tile-close:hover{ filter: brightness(.95); }
 
-/* ממוזערות */
-.snapshot {
-  margin: 10px 0 0;
-  border: 2px dashed #645774;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #fff;
-}
-.scale-inner {
-  /* הקנבס לפני scale – אין כאן מידות כדי שלא ננעל גובה */
-  transform-origin: top left;
-}
-
-/* התאמות קטנות למסכים צרים */
-@media (max-width: 700px) {
-  .dashboard-card button {
-    width: 100%;
-  }
-}
-
-/* ===== בונוס: ירושת צבע לטקסטים בתוך הממוזערת ===== */
-.snap-title,
-.snap-sub,
-.snap-body {
-  color: inherit;
+/* דוגמת placeholder */
+.placeholder-surface{
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255,255,255,0.18) 0 12px,
+    rgba(255,255,255,0.06) 12px 24px
+  );
+  border-radius: 12px;
 }
