@@ -1,11 +1,9 @@
-// landingPage.js
 import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderBannerEditor } from "./bannerEditor.js";
-import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
   getLandingPage,
@@ -27,33 +25,24 @@ export function renderLandingPage(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // Header
   const header = renderHeader(
     username,
     (key) => {
-      switch (key) {
-        case "dashboard":
-          renderDashboard(username);
-          break;
-        case "banners":
-          renderBannerEditor(username);
-          break;
-        case "marketing":
-          renderMarketingPage(username);
-          break;
-        case "landing":
-          renderLandingPage(username);
-          break;
-        default:
-          console.warn("Unknown page:", key);
-      }
+      if (key === "dashboard") renderDashboard(username);
+      else if (key === "banners") renderBannerEditor(username);
+      else if (key === "marketing") renderMarketingPage(username);
+      else if (key === "landing") renderLandingPage(username);
+      else console.warn("Unknown page:", key);
     },
     () => {
       clearLoggedInUser();
       renderLogin();
-    },
-    "landing" // ← קישור פעיל
+    }
   );
+  app.appendChild(header);
 
+  // Layout
   const container = document.createElement("div");
   container.className = "landing-container";
 
@@ -72,17 +61,32 @@ export function renderLandingPage(username) {
         </select>
       </div>
 
-      <div class="field"><label>Main title</label><input id="title" placeholder="Bannerist helps you launch faster"/></div>
-      <div class="field"><label>Subtitle</label><input id="subtitle" placeholder="Create and manage ads, emails & landings in minutes."/></div>
-      <div class="field"><label>Paragraph</label><textarea id="body" placeholder="Design quickly, preview instantly, and save your work locally."></textarea></div>
+      <div class="field"><label>Main title</label>
+        <input id="title" placeholder="Bannerist helps you launch faster"/></div>
 
-      <div class="field"><label>Hero Image URL</label><input id="imgUrl" placeholder="https://…"/></div>
-      <div class="field"><label>CTA Text</label><input id="ctaText" placeholder="Start free"/></div>
-      <div class="field"><label>CTA URL</label><input id="ctaUrl" placeholder="https://example.com"/></div>
+      <div class="field"><label>Subtitle</label>
+        <input id="subtitle" placeholder="Create and manage ads, emails & landings in minutes."/></div>
 
-      <div class="field"><label>Background</label><input id="bg" type="color"/></div>
-      <div class="field"><label>Text color</label><input id="color" type="color"/></div>
-      <div class="field"><label>Accent color (CTA)</label><input id="accent" type="color"/></div>
+      <div class="field"><label>Paragraph</label>
+        <textarea id="body" placeholder="Design quickly, preview instantly, and save your work locally."></textarea></div>
+
+      <div class="field"><label>Hero Image URL</label>
+        <input id="imgUrl" placeholder="https://…"/></div>
+
+      <div class="field"><label>CTA Text</label>
+        <input id="ctaText" placeholder="Start free"/></div>
+
+      <div class="field"><label>CTA URL</label>
+        <input id="ctaUrl" placeholder="https://example.com"/></div>
+
+      <div class="field"><label>Background</label>
+        <input id="bg" type="color"/></div>
+
+      <div class="field"><label>Text color</label>
+        <input id="color" type="color"/></div>
+
+      <div class="field"><label>Accent color (CTA)</label>
+        <input id="accent" type="color"/></div>
 
       <div class="field"><label>Font family</label>
         <select id="font">
@@ -96,23 +100,30 @@ export function renderLandingPage(username) {
 
     <h3 style="margin:16px 0 8px">Lead Form</h3>
     <div class="form-grid">
-      <div class="field"><label>Form Title</label><input id="leadTitle" placeholder="Stay updated"/></div>
-      <div class="field"><label>Submit Button</label><input id="leadBtn" placeholder="Sign Up"/></div>
+      <div class="field"><label>Form Title</label>
+        <input id="leadTitle" placeholder="Stay updated"/></div>
+      <div class="field"><label>Submit Button</label>
+        <input id="leadBtn" placeholder="Sign Up"/></div>
     </div>
 
     <div class="actions">
-      <button id="go-live">Go live</button>
-      <button id="reset">Reset</button>
+      <button id="go-live" class="btn btn--primary">Go live</button>
+      <button id="reset"  class="btn btn--ghost">Reset</button>
     </div>
   `;
 
   const preview = document.createElement("div");
   preview.className = "section landing-preview";
-  preview.innerHTML = `<div id="canvas" class="placeholder-surface" aria-label="landing preview"></div>`;
+  preview.innerHTML = `
+    <div class="lp-stage" id="lp-stage">
+      <div id="canvas" class="lp-canvas placeholder-surface" style="width:1000px"></div>
+    </div>
+  `;
 
   container.append(controls, preview);
-  app.append(header, container);
+  app.appendChild(container);
 
+  // State
   const DEF = {
     tpl: "t1",
     title: "",
@@ -144,6 +155,7 @@ export function renderLandingPage(username) {
     font: controls.querySelector("#font"),
     leadTitle: controls.querySelector("#leadTitle"),
     leadBtn: controls.querySelector("#leadBtn"),
+    stage: preview.querySelector("#lp-stage"),
     canvas: preview.querySelector("#canvas"),
     goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
@@ -154,11 +166,13 @@ export function renderLandingPage(username) {
   });
 
   const btn = (text, url, accent) =>
-    `<a href="${
-      url || "#"
-    }" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
-      accent || "#2d89ef"
-    };color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
+    `<a href="${url || "#"}" style="
+      display:inline-block;padding:12px 18px;border-radius:10px;
+      background:${
+        accent || "#2d89ef"
+      };color:#fff;text-decoration:none;font-weight:700">
+      ${text || "CTA"}
+    </a>`;
 
   const leadForm = (title, btnText, accent) => `
     <form onsubmit="return false" style="margin-top:16px; display:grid; gap:10px">
@@ -167,18 +181,17 @@ export function renderLandingPage(username) {
       <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
       <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${
         accent || "#2d89ef"
-      };color:#fff;font-weight:700;cursor:pointer">${
-    btnText || "Submit"
-  }</button>
+      };color:#fff;font-weight:700;cursor:pointer">
+        ${btnText || "Submit"}
+      </button>
     </form>
   `;
 
-  function renderTpl(s) {
+  function tplHTML(s) {
     const shell = `
-      background:${s.bg || "transparent"}; color:${
-      s.color || "#333"
-    }; font-family:${s.font};
-      width:100%; max-width:1000px; margin:0 auto; line-height:1.5; padding:18px;
+      background:${s.bg || "transparent"}; color:${s.color || "#333"};
+      font-family:${s.font}; width:100%; max-width:1000px; margin:0 auto;
+      line-height:1.5; padding:18px;
     `;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 14px;border-radius:12px"/>`
@@ -200,28 +213,33 @@ export function renderLandingPage(username) {
           <p style="margin:0 0 16px">${s.body || ""}</p>
           ${btn(s.ctaText, s.ctaUrl, s.accent)}
           ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
-        </div>`;
+        </div>
+      `;
     }
+
     if (s.tpl === "t3") {
       return `
-      <div style="${shell}">
-        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:18px">
-          <div>
-            <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-            <h3 style="margin:0 0 12px;opacity:.85">${s.subtitle || ""}</h3>
-            <p style="margin:0 0 16px">${s.body || ""}</p>
-            ${btn(s.ctaText, s.ctaUrl, s.accent)}
-            ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
-          </div>
-          <div>
-            ${
-              img ||
-              `<div style="height:260px;display:grid;place-items:center;color:#888;background:rgba(0,0,0,.05);border-radius:12px">Image</div>`
-            }
+        <div style="${shell}">
+          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:18px">
+            <div>
+              <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+              <h3 style="margin:0 0 12px;opacity:.85">${s.subtitle || ""}</h3>
+              <p style="margin:0 0 16px">${s.body || ""}</p>
+              ${btn(s.ctaText, s.ctaUrl, s.accent)}
+              ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+            </div>
+            <div>
+              ${
+                img ||
+                `<div style="height:260px;display:grid;place-items:center;color:#888;background:rgba(0,0,0,.05);border-radius:12px">Image</div>`
+              }
+            </div>
           </div>
         </div>
-      </div>`;
+      `;
     }
+
+    // t1
     return `
       <div style="${shell}">
         <h1 style="margin:0 0 8px">${s.title || ""}</h1>
@@ -230,12 +248,32 @@ export function renderLandingPage(username) {
         <p style="margin:0 0 16px">${s.body || ""}</p>
         ${btn(s.ctaText, s.ctaUrl, s.accent)}
         ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
-      </div>`;
+      </div>
+    `;
   }
 
   function render() {
-    els.canvas.innerHTML = renderTpl(state);
+    els.canvas.innerHTML = tplHTML(state);
+    fitLanding();
   }
+
+  function fitLanding() {
+    const stage = els.stage.getBoundingClientRect();
+    const inner = els.canvas.firstElementChild;
+    if (!inner) return;
+    els.canvas.style.transformOrigin = "top left";
+    const pad = 16;
+    requestAnimationFrame(() => {
+      const contentH = inner.getBoundingClientRect().height;
+      const scaleW = (stage.width - pad) / 1000;
+      const scaleH = (stage.height - pad) / contentH;
+      let scale = Math.min(scaleW, scaleH);
+      if (!isFinite(scale) || scale <= 0) scale = 1;
+      if (scale > 1.0) scale = 1.0;
+      els.canvas.style.transform = `scale(${scale})`;
+    });
+  }
+
   function persist() {
     saveLandingPage(state);
   }
@@ -244,8 +282,8 @@ export function renderLandingPage(username) {
     if (!els[k]) return;
     els[k].addEventListener("input", () => {
       state[k] = els[k].value;
-      render();
       persist();
+      render();
       toast("Saved");
     });
   });
@@ -255,8 +293,8 @@ export function renderLandingPage(username) {
     Object.keys(state).forEach((k) => {
       if (els[k]) els[k].value = state[k] || "";
     });
-    render();
     persist();
+    render();
     toast("Reset");
   });
 
@@ -265,6 +303,7 @@ export function renderLandingPage(username) {
     saveLandingPage(state);
     setLandingActive(true);
     toast("Published");
+    // איפוס שדות התוכן בלבד
     [
       "title",
       "subtitle",
@@ -284,8 +323,6 @@ export function renderLandingPage(username) {
     render();
   });
 
+  window.addEventListener("resize", fitLanding);
   render();
-
-  // פוטר
-  app.append(renderFooter());
 }

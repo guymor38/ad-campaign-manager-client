@@ -17,3 +17,9 @@ footer {
   color: white;
   text-align: center;
 }
+
+/* Prevent horizontal scroll globally */
+html,
+body {
+  overflow-x: hidden;
+}

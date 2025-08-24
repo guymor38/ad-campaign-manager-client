@@ -1,23 +1,24 @@
-/* ===== Dashboard Layout ===== */
+/* ----- מעטפת ----- */
 .dashboard-container {
-  width: 100%;
-  max-width: 1200px;
-  padding: 24px 16px;
-  color: #80b9b1;
-  gap: 20px;
+  width: min(1200px, 100%);
   margin: 0 auto;
+  padding: 24px;
+  color: #80b9b1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
 }
 
-/* כרטיס ברכה עליון */
 .dashboard-card {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 16px;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* מונע גלילה אופקית כש-thumbnails scaled */
 }
 
+/* כותרות וכפתורים */
 .dashboard-card h1 {
   margin: 0 0 8px;
   font-size: clamp(1.6rem, 2vw, 2rem);
@@ -28,7 +29,6 @@
   line-height: 1.5;
   opacity: 0.95;
 }
-
 .dashboard-card button {
   padding: 10px 16px;
   border: none;
@@ -37,54 +37,32 @@
   color: #1c1a26;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 2px 2px 4px #645774;
-  transition: filter 0.15s;
+  box-shadow: 2px 2px 4px #514864;
+  transition: filter 0.12s;
 }
 .dashboard-card button:hover {
   filter: brightness(0.95);
 }
-
-/* סגירת כרטיס */
 .dash-close {
-  width: 26px;
-  height: 26px;
+  margin-right: 8px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   background: #80b9b1;
   color: #1c1a26;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  font-weight: 800;
 }
 
-/* grid של הקמפיינים החיים */
+/* גריד הכרטיסים */
 .dashboard-grid {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 20px;
-  align-items: start;
-}
-@media (max-width: 1100px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(280px, 1fr));
-  }
-}
-@media (max-width: 720px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
-/* הופך תצוגה מקדימה ל"מרכזית" בתוך הכרטיס ולא שוברת אותו */
-.dashboard-card > :last-child {
-  margin: 4px auto 0;
-  max-width: 100%;
-}
-
-/* placeholder pattern */
+/* אזורי preview בכרטיסים */
 .dashboard-card .placeholder-surface {
   background-image: repeating-linear-gradient(
     -45deg,
@@ -94,25 +72,9 @@
   border-radius: 12px;
 }
 
-/* ───────── Dashboard grid fixes ───────── */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-@media (max-width: 1100px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(260px, 1fr));
-  }
-}
-@media (max-width: 720px) {
+/* התאמות רספונסיביות */
+@media (max-width: 700px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
-}
-
-/* אלמנטים פנימיים לא שוברים את הכרטיס */
-.dashboard-card > * {
-  max-width: 100%;
 }

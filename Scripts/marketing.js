@@ -1,11 +1,9 @@
-// marketing.js
 import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderLandingPage } from "./landingPage.js";
 import { renderBannerEditor } from "./bannerEditor.js";
-import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
   getMarketingPage,
@@ -27,31 +25,23 @@ export function renderMarketingPage(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // Header / Nav
   const header = renderHeader(
     username,
     (key) => {
-      switch (key) {
-        case "dashboard":
-          renderDashboard(username);
-          break;
-        case "banners":
-          renderBannerEditor(username);
-          break;
-        case "marketing":
-          renderMarketingPage(username);
-          break;
-        case "landing":
-          renderLandingPage(username);
-          break;
-      }
+      if (key === "dashboard") renderDashboard(username);
+      else if (key === "banners") renderBannerEditor(username);
+      else if (key === "marketing") renderMarketingPage(username);
+      else if (key === "landing") renderLandingPage(username);
     },
     () => {
       clearLoggedInUser();
       renderLogin();
-    },
-    "marketing" // ← קישור פעיל
+    }
   );
+  app.appendChild(header);
 
+  // Layout
   const container = document.createElement("div");
   container.className = "marketing-container";
 
@@ -59,7 +49,7 @@ export function renderMarketingPage(username) {
   controls.className = "panel";
   controls.innerHTML = `
     <h2>Email Builder</h2>
-    <p style="opacity:.85;margin:6px 0 12px">רוחב קבוע 650px · שמירה אוטומטית</p>
+    <p style="opacity:.85;margin:6px 0 12px">רוחב פריוויו: 650px • שמירה אוטומטית</p>
 
     <div class="marketing-editor">
       <div class="field">
@@ -71,17 +61,32 @@ export function renderMarketingPage(username) {
         </select>
       </div>
 
-      <div class="field"><label>Title</label><input id="title" placeholder="Your great headline"/></div>
-      <div class="field"><label>Subtitle</label><input id="subtitle" placeholder="Sub headline goes here"/></div>
-      <div class="field"><label>Body</label><textarea id="body" placeholder="Body copy for your email. Keep it short and clear."></textarea></div>
+      <div class="field"><label>Title</label>
+        <input id="title" placeholder="Your great headline"/></div>
 
-      <div class="field"><label>Image URL</label><input id="imgUrl" placeholder="https://..."/></div>
-      <div class="field"><label>Button text</label><input id="ctaText" placeholder="Learn more"/></div>
-      <div class="field"><label>Button URL</label><input id="ctaUrl" placeholder="https://example.com"/></div>
+      <div class="field"><label>Subtitle</label>
+        <input id="subtitle" placeholder="Sub headline goes here"/></div>
 
-      <div class="field"><label>Background</label><input id="bg" type="color"/></div>
-      <div class="field"><label>Text color</label><input id="color" type="color"/></div>
-      <div class="field"><label>Accent color (button)</label><input id="accent" type="color"/></div>
+      <div class="field"><label>Body</label>
+        <textarea id="body" placeholder="Body copy for your email. Keep it short and clear."></textarea></div>
+
+      <div class="field"><label>Image URL</label>
+        <input id="imgUrl" placeholder="https://..."/></div>
+
+      <div class="field"><label>Button text</label>
+        <input id="ctaText" placeholder="Learn more"/></div>
+
+      <div class="field"><label>Button URL</label>
+        <input id="ctaUrl" placeholder="https://example.com"/></div>
+
+      <div class="field"><label>Background</label>
+        <input id="bg" type="color"/></div>
+
+      <div class="field"><label>Text color</label>
+        <input id="color" type="color"/></div>
+
+      <div class="field"><label>Accent color (button)</label>
+        <input id="accent" type="color"/></div>
 
       <div class="field">
         <label>Font family</label>
@@ -95,21 +100,24 @@ export function renderMarketingPage(username) {
     </div>
 
     <div class="actions">
-      <button id="go-live">Go live</button>
-      <button id="reset">Reset</button>
+      <button id="go-live" class="btn btn--primary">Go live</button>
+      <button id="reset"  class="btn btn--ghost">Reset</button>
     </div>
   `;
 
   const preview = document.createElement("div");
   preview.className = "panel";
   preview.innerHTML = `
-    <h3 style="margin-bottom:10px">Live Preview (650px)</h3>
-    <div class="email-canvas placeholder-surface" id="email"></div>
+    <h3 style="margin-bottom:10px">Live Preview</h3>
+    <div class="email-stage" id="email-stage">
+      <div class="email-canvas placeholder-surface" id="email" style="width:650px"></div>
+    </div>
   `;
 
   container.append(controls, preview);
-  app.append(header, container);
+  app.appendChild(container);
 
+  // ===== State =====
   const DEF = {
     tpl: "t1",
     title: "",
@@ -137,81 +145,112 @@ export function renderMarketingPage(username) {
     color: controls.querySelector("#color"),
     accent: controls.querySelector("#accent"),
     font: controls.querySelector("#font"),
+    stage: preview.querySelector("#email-stage"),
     email: preview.querySelector("#email"),
     goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
   };
 
+  // preload to inputs (only if value exists)
   Object.entries(state).forEach(([k, v]) => {
     if (els[k] && v) els[k].value = v;
   });
 
+  // HTML for templates
   function emailHTML(s) {
-    const base = `
-      background:${s.bg || "transparent"}; color:${
-      s.color || "#333"
-    }; font-family:${s.font};
-      width:650px; margin:0 auto; line-height:1.5; padding:18px;
+    const baseWrap = `
+      background:${s.bg || "transparent"}; color:${s.color || "#333"};
+      font-family:${s.font}; line-height:1.5; padding:18px;
     `;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
       : "";
-    const btn = (text, url) => `<a href="${url || "#"}"
-      style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
-             background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">${
-      text || "Button"
-    }</a>`;
+    const btn = (text, url) => `
+      <a href="${url || "#"}" 
+         style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
+                background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
+        ${text || "Button"}
+      </a>`;
 
     if (s.tpl === "t2") {
-      return `<div style="${base}">
-        <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
-          ${
-            img ||
-            `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
-          }
-        </div>
-        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-        <p style="margin:0 0 16px">${s.body || ""}</p>
-        ${btn(s.ctaText, s.ctaUrl)}
-      </div>`;
-    }
-    if (s.tpl === "t3") {
-      return `<div style="${base}">
-        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-          ${img}
-          <h2 style="margin:0 0 8px">${s.title || ""}</h2>
-          <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+      return `
+        <div style="${baseWrap}">
+          <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
+            ${
+              img ||
+              `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
+            }
+          </div>
+          <h1 style="margin:0 0 8px">${s.title || ""}</h1>
           <p style="margin:0 0 16px">${s.body || ""}</p>
           ${btn(s.ctaText, s.ctaUrl)}
         </div>
-      </div>`;
+      `;
     }
-    return `<div style="${base}">
-      <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
-      ${img}
-      <p style="margin:0 0 16px">${s.body || ""}</p>
-      ${btn(s.ctaText, s.ctaUrl)}
-    </div>`;
+
+    if (s.tpl === "t3") {
+      return `
+        <div style="${baseWrap}">
+          <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+            ${img}
+            <h2 style="margin:0 0 8px">${s.title || ""}</h2>
+            <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+            <p style="margin:0 0 16px">${s.body || ""}</p>
+            ${btn(s.ctaText, s.ctaUrl)}
+          </div>
+        </div>
+      `;
+    }
+
+    // t1
+    return `
+      <div style="${baseWrap}">
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+        ${img}
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+      </div>
+    `;
   }
 
   function render() {
     const s = state;
-    const el = els.email;
-    if (s.bg) el.classList.remove("placeholder-surface");
-    else el.classList.add("placeholder-surface");
-    el.innerHTML = emailHTML(s);
+    if (s.bg) els.email.classList.remove("placeholder-surface");
+    else els.email.classList.add("placeholder-surface");
+    els.email.innerHTML = emailHTML(s);
+    fitEmail();
   }
+
+  function fitEmail() {
+    const stage = els.stage.getBoundingClientRect();
+    const inner = els.email.firstElementChild;
+    if (!inner) return;
+    els.email.style.transformOrigin = "top left";
+    const pad = 16;
+    // חישוב אחרי שה־DOM עודכן
+    requestAnimationFrame(() => {
+      const contentH = inner.getBoundingClientRect().height;
+      const scaleW = (stage.width - pad) / 650;
+      const scaleH = (stage.height - pad) / contentH;
+      let scale = Math.min(scaleW, scaleH);
+      if (!isFinite(scale) || scale <= 0) scale = 1;
+      if (scale > 1.4) scale = 1.4;
+      els.email.style.transform = `scale(${scale})`;
+    });
+  }
+
   function persist() {
     saveMarketingPage(state);
   }
 
+  // inputs
   Object.keys(state).forEach((k) => {
     if (!els[k]) return;
     els[k].addEventListener("input", () => {
       state[k] = els[k].value;
-      render();
       persist();
+      render();
       toast("Saved");
     });
   });
@@ -221,8 +260,8 @@ export function renderMarketingPage(username) {
     Object.keys(state).forEach((k) => {
       if (els[k]) els[k].value = state[k] || "";
     });
-    render();
     persist();
+    render();
     toast("Reset");
   });
 
@@ -231,6 +270,7 @@ export function renderMarketingPage(username) {
     saveMarketingPage(state);
     setMarketingActive(true);
     toast("Published");
+    // איפוס מקומי לשדות התוכן בלבד
     [
       "title",
       "subtitle",
@@ -248,8 +288,6 @@ export function renderMarketingPage(username) {
     render();
   });
 
+  window.addEventListener("resize", fitEmail);
   render();
-
-  // פוטר
-  app.append(renderFooter());
 }

@@ -1,14 +1,8 @@
-// header.js
-export function renderHeader(
-  username,
-  onNavigate,
-  onLogout,
-  currentKey = "dashboard"
-) {
+export function renderHeader(username, onNavigate, onLogout, currentKey) {
   const header = document.createElement("header");
   header.className = "header";
 
-  // --- Left cluster: Logo + Nav ---
+  // Left cluster: logo + nav
   const left = document.createElement("div");
   left.className = "header__left";
 
@@ -21,41 +15,38 @@ export function renderHeader(
 
   const pages = [
     { key: "dashboard", label: "Home" },
-    { key: "banners", label: "Banners" },
+    { key: "banners", label: "Banner Editor" },
     { key: "marketing", label: "Marketing" },
     { key: "landing", label: "Landing Page" },
   ];
 
   pages.forEach(({ key, label }) => {
-    const a = document.createElement("a");
-    a.href = "javascript:void(0)";
-    a.textContent = label;
-    a.className =
-      "nav__link" + (key === currentKey ? " nav__link--active" : "");
-    a.addEventListener("click", () => onNavigate(key));
-    nav.appendChild(a);
+    const btn = document.createElement("button");
+    btn.textContent = label;
+    btn.dataset.key = key;
+    if (currentKey === key) btn.classList.add("active");
+    btn.addEventListener("click", () => onNavigate(key));
+    nav.appendChild(btn);
   });
 
   left.append(logo, nav);
 
-  // --- Right cluster: Avatar + Logout ---
+  // Right cluster: avatar + logout
   const right = document.createElement("div");
   right.className = "header__right";
 
   const avatar = document.createElement("div");
   avatar.className = "avatar";
-  avatar.textContent = (username || "?").slice(0, 2).toUpperCase();
+  avatar.textContent = (username || "?").slice(0, 1).toUpperCase();
 
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "btn btn--ghost";
   logoutBtn.textContent = "Logout";
-  logoutBtn.addEventListener("click", () => onLogout());
+  logoutBtn.addEventListener("click", onLogout);
 
   right.append(avatar, logoutBtn);
 
-  // spacer באמצע כדי לדחוף את הימין לשוליים
-  const spacer = document.createElement("div");
-
-  header.append(left, spacer, right);
+  // Assemble
+  header.append(left, document.createElement("div"), right);
   return header;
 }

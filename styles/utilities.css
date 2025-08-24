@@ -1,173 +1,38 @@
-/* utilities.css — Layout glue + תיקוני overflow  */
-
-/* שורש */
+/* ---------- App layout: footer נצמד לתחתית בלי גלילה מיותרת ---------- */
 html,
 body {
   height: 100%;
 }
-
-/* ה-App עובר למבנה עמוד גמיש: Header | Content | Footer */
 #app {
-  min-height: 100dvh; /* בטוח גם במובייל */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
-
-/* חלוקת השכבות */
-#app > header {
-  flex: 0 0 auto;
-}
-#app > .footer {
-  flex: 0 0 auto;
+.footer {
+  margin-top: auto;
 }
 
-/* אזור התוכן של כל עמוד: תופס את כל השאר, בלי לייצר גלילה אם אין צורך */
-#app > .dashboard-container,
-#app > .banner-editor-container,
-#app > .marketing-container,
-#app > .landing-container {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 16px;
-  min-height: 0; /* מונע overflow פנימי */
-}
-
-/* דקאורטיבי קיים */
-.placeholder-surface {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.18) 0 12px,
-    rgba(255, 255, 255, 0.06) 12px 24px
-  );
-  border-radius: 12px;
-}
-
-/* ===== Dashboard grid ===== */
+/* רוחב ותוכן דף שכיחים */
+.banner-editor-container,
+.marketing-container,
+.landing-container,
 .dashboard-container {
-  width: 100%;
-}
-
-.dashboard-grid {
-  width: 100%;
-  max-width: 1180px;
+  width: min(1200px, 100%);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
-  gap: 20px;
-  align-items: start;
-}
-@media (max-width: 1100px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(280px, 1fr));
-  }
-}
-@media (max-width: 720px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+  padding: 24px;
 }
 
-.dashboard-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 16px;
-  overflow: hidden;
-}
-.dashboard-card h3 {
-  margin: 0 0 6px;
-  font-size: 1rem;
-  color: #80b9b1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.dash-close {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  background: #80b9b1;
-  color: #1c1a26;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-.dashboard-card > :last-child {
-  margin: 4px auto 0;
-  max-width: 100%;
-}
-
-/* ===== ביטול min-height/גובה קשיח שעשוי לגרום לגלילה מיותרת ===== */
-/* אין לנו צורך ב-min-height לפאנלים והפריוויואים – שיישבו לפי תוכן */
-.panel,
-.section {
-  min-height: auto;
-}
-.landing-preview,
-.email-canvas,
-.banner-frames {
-  min-height: 0;
-  height: auto;
-}
-
-/* למנוע מרווח תחתון אחרון שמדביק גלילה */
-#app > *:last-child {
-  margin-bottom: 0;
-}
-
-/* ───────────────── Global Layout ───────────────── */
-
-/* כדי שהפוטר תמיד יהיה בתחתית, והדף יתפוס את כל הגובה */
-html,
-body {
-  height: 100%;
-}
-#app {
-  min-height: 100svh; /* 100% גובה מסך בטוח */
-  display: grid;
-  grid-template-rows: auto 1fr auto; /* header | content | footer */
-}
-
-/* ממרכזים ומגבילים רוחב של כל עמודי האפליקציה */
-:where(
-    .dashboard-container,
-    .banner-editor-container,
-    .marketing-container,
-    .landing-container
-  ) {
-  width: min(1200px, calc(100% - 48px)); /* Padding כולל 24px מכל צד */
-  margin-inline: auto;
-  padding-block: 24px;
-}
-
-/* מראה בסיסי אחיד לפאנלים/כרטיסים */
-.panel,
-.section,
-.dashboard-card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-/* למנוע גלילה/גלילה צדדית אם התצוגה המוקטנת גדולה מהכרטיס */
-.panel.preview,
-.dashboard-card {
-  overflow: hidden;
-}
-
-/* משטח placeholder משוּרְטט – לא חובה אבל שימושי */
+/* משטח placeholder עדין לכל ה-previews */
 .placeholder-surface {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgba(255, 255, 255, 0.18) 0 12px,
+    rgba(255, 255, 255, 0.16) 0 12px,
     rgba(255, 255, 255, 0.06) 12px 24px
   );
   border-radius: 12px;
+}
+
+/* עזרי Layout */
+.hidden {
+  display: none !important;
 }

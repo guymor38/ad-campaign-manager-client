@@ -1,196 +1,209 @@
-/* ===== Banner Editor layout ===== */
+/* Banner Editor – שני טורים: טופס | פריוויו */
 .banner-editor-container {
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
+  margin: 24px auto;
+  padding: 0 16px;
   display: grid;
-  grid-template-columns: 400px 1fr;
-  gap: 20px;
-  color: #e6faf7;
+  grid-template-columns: 420px 1fr;
+  gap: 28px;
+  align-items: start;
 }
-.panel {
+
+/* Panels */
+.banner-editor-container .panel {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 16px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
-.panel h2 {
-  margin: 0 0 8px;
-  color: #80b9b1;
-}
-.preview h3 {
-  margin: 0 0 10px;
+.banner-editor-container h2,
+.banner-editor-container h3 {
+  margin: 0 0 12px;
   color: #80b9b1;
 }
 
-/* form */
-.field {
+/* Fields */
+.banner-editor-container .field {
   display: grid;
   gap: 6px;
-  margin-bottom: 12px;
+  margin: 12px 0;
 }
-.field label {
-  opacity: 0.9;
+.banner-editor-container .field > label {
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #bfe6e0;
+  letter-spacing: 0.2px;
+  color: #e9f5f3;
+  opacity: 0.95;
 }
-.controls input[type="text"],
-.controls input[type="number"],
-.controls input[type="url"],
-.controls select,
-.controls textarea {
+
+/* Inputs */
+.banner-editor-container input[type="text"],
+.banner-editor-container input[type="number"],
+.banner-editor-container select,
+.banner-editor-container textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 2px solid #645774;
-  background: #fff;
-  color: #333;
-  box-sizing: border-box;
+  border: 2px solid #6e627c;
+  background: #ffffff;
+  color: #1c1a26;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.03);
 }
-.controls textarea {
-  min-height: 90px;
+.banner-editor-container textarea {
+  min-height: 96px;
   resize: vertical;
 }
 
-/* small color inputs – ריבוע ברור */
-.controls input[type="color"] {
-  width: 60px;
+.banner-editor-container input:focus,
+.banner-editor-container select:focus,
+.banner-editor-container textarea:focus {
+  border-color: #80b9b1;
+  box-shadow: 0 0 0 3px rgba(128, 185, 177, 0.25);
+}
+
+/* Color input */
+.banner-editor-container input[type="color"] {
+  appearance: none;
+  width: 56px;
   height: 28px;
   padding: 0;
+  border-radius: 8px;
+  border: 2px solid #6e627c;
+  background: #fff;
+  cursor: pointer;
+}
+.banner-editor-container input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 6px;
+}
+.banner-editor-container input[type="color"]::-webkit-color-swatch {
   border: none;
   border-radius: 6px;
-  background: transparent;
-  box-shadow: 0 0 0 2px #645774 inset;
 }
 
-.group.two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Actions */
+.banner-editor-container .actions {
+  display: flex;
   gap: 12px;
+  margin-top: 14px;
 }
-.subhead {
-  margin: 8px 0;
-  color: #bfe6e0;
-}
-
-/* buttons */
-.form-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 12px;
-}
-.btn {
+.banner-editor-container .btn {
   border: none;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 2px 2px 4px #645774;
+  box-shadow: 2px 2px 4px #514864;
 }
-.btn--primary {
-  background: #80b9b1;
+.banner-editor-container .btn.btn--primary {
+  background: linear-gradient(180deg, #80b9b1, #6caea6);
   color: #fff;
 }
-.btn--primary:hover {
-  filter: brightness(0.95);
-}
-.btn--ghost {
+.banner-editor-container .btn.btn--ghost {
   background: transparent;
   color: #80b9b1;
   border: 2px solid #80b9b1;
 }
-.btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.06);
+.banner-editor-container .btn:hover {
+  filter: brightness(0.98);
 }
 
-/* preview frame */
-.banner-frames {
+/* Preview stage */
+.preview-stage {
+  width: 100%;
+  height: clamp(440px, 62vh, 700px);
   display: grid;
-  grid-template-columns: 1fr;
+  place-items: center;
+  border: 2px dashed #645774;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  padding: 8px;
 }
-.banner-frame {
-  min-height: 360px;
+
+/* הבאנר עצמו (JS מגדיר width/height + scale) */
+.banner-editor-container .banner-content.bn {
+  border: 2px dashed #c9c1d4;
+  border-radius: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
   display: grid;
-  place-items: start;
-  padding: 10px;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 12px;
-}
-.banner-content {
-  width: 250px;
-  height: 250px;
-  border-radius: 12px;
-  overflow: hidden; /* חשוב כדי שלא יברח */
+  place-items: center;
 }
 
-/* placeholder diagonal */
-.placeholder-surface {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.18) 0 12px,
-    rgba(255, 255, 255, 0.06) 12px 24px
-  );
-  border-radius: 12px;
+/* תוכן פנימי של הבאנר */
+.bn__inner {
+  display: grid;
+  gap: 6px;
+  width: 90%;
+  max-width: 90%;
+  margin: 0 auto;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
-/* Toast */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%) translateY(10px);
-  padding: 10px 14px;
-  background: #2e7d32;
-  color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+.bn__title {
+  font-weight: 800;
+}
+.bn__subtitle {
   font-weight: 700;
-  opacity: 0;
-  z-index: 9999;
-  animation: toast-in 0.18s ease-out forwards,
-    toast-out 0.25s ease-in 1.2s forwards;
+  opacity: 0.9;
 }
-.toast.warn {
-  background: #c62828;
-}
-@keyframes toast-in {
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-@keyframes toast-out {
-  to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(12px);
-  }
+.bn__body {
+  opacity: 0.95;
 }
 
-/* responsive */
-@media (max-width: 960px) {
+/* T1 */
+.bn--t1 .bn__inner.t1 {
+  padding: 10px;
+}
+.bn--t1 .bn__subtitle {
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  padding-top: 6px;
+}
+
+/* T2 – כרטיס לבן על רקע נקודות */
+.bn--t2 .bn__inner.t2 {
+  padding: 10px;
+  display: grid;
+  place-items: center;
+}
+.bn--t2 .bn__card {
+  background: rgba(255, 255, 255, 0.9);
+  color: inherit;
+  border-radius: 12px;
+  padding: 10px;
+  width: 92%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+/* T3 – פס עליון + טקסט */
+.bn--t3 .bn__inner.t3 {
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  justify-items: center;
+  padding: 8px;
+  gap: 10px;
+}
+.bn--t3 .bn__bar {
+  width: 88%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.bn--t3 .bn__stack {
+  width: 90%;
+  margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
   .banner-editor-container {
     grid-template-columns: 1fr;
-  }
-  .banner-frame {
-    min-height: 280px;
-  }
-}
-
-/* ───────── Banner Editor layout ───────── */
-.banner-editor-container {
-  display: grid;
-  grid-template-columns: minmax(320px, 420px) 1fr; /* שמאל: טופס, ימין: פריוויו */
-  gap: 24px;
-  align-items: start;
-}
-
-.banner-editor-container .panel.preview {
-  min-height: 360px;
-}
-
-@media (max-width: 960px) {
-  .banner-editor-container {
-    grid-template-columns: 1fr; /* במובייל: אחד מתחת לשני */
   }
 }

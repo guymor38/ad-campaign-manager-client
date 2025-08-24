@@ -1,161 +1,162 @@
-/* ===== Landing Page Builder (GRID) ===== */
+/* ===== Landing Page Builder ===== */
 .landing-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
-  color: #80b9b1;
-
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
   display: grid;
-  grid-template-columns: 1fr 1fr; /* שמאל: עורך | ימין: תצוגה */
-  gap: 20px;
-}
-@media (max-width: 900px) {
-  .landing-container {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: 420px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
 }
 
-/* אזור כללי / "section" */
-.section {
+/* Panels / Sections */
+.landing-container .section {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 16px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+.landing-container h2,
+.landing-container h3 {
+  margin: 0 0 12px;
+  color: #80b9b1;
 }
 
-/* טופס (GRID) */
+/* Form grid */
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* שני טורים */
+  grid-template-columns: 1fr 1fr;
   gap: 12px 16px;
 }
-@media (max-width: 700px) {
+@media (max-width: 760px) {
   .form-grid {
     grid-template-columns: 1fr;
   }
 }
+
+/* Fields */
 .field {
   display: grid;
   gap: 6px;
 }
-.field label {
-  font-weight: 600;
-  margin-bottom: 0;
+.field > label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #e9f5f3;
+  opacity: 0.95;
 }
-.section input,
+
+/* Inputs */
+.section input[type="text"],
+.section input[type="url"],
+.section input[type="number"],
 .section select,
 .section textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 2px solid #645774;
+  border: 2px solid #6e627c;
   background: #fff;
-  color: #2b2b2b;
+  color: #1c1a26;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.03);
 }
 .section textarea {
   min-height: 100px;
   resize: vertical;
 }
 
-/* תצוגה חיה (קנבס) */
-.landing-preview {
+.section input:focus,
+.section select:focus,
+.section textarea:focus {
+  border-color: #80b9b1;
+  box-shadow: 0 0 0 3px rgba(128, 185, 177, 0.25);
+}
+
+/* Color input */
+.section input[type="color"] {
+  appearance: none;
+  width: 56px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 2px solid #6e627c;
   background: #fff;
-  border-radius: 12px;
-  padding: 8px;
-  min-height: 300px;
+  cursor: pointer;
+}
+.section input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 6px;
+}
+.section input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+/* Actions */
+.section .actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+.section .btn {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px #514864;
+}
+.section .btn--primary {
+  background: linear-gradient(180deg, #80b9b1, #6caea6);
+  color: #fff;
+}
+.section .btn--ghost {
+  background: transparent;
+  color: #80b9b1;
+  border: 2px solid #80b9b1;
+}
+
+/* Preview stage */
+.landing-preview {
+  padding: 0; /* המסגרת עצמה */
+}
+.lp-stage {
+  width: 100%;
+  height: clamp(520px, 62vh, 820px);
   border: 2px dashed #645774;
-  color: #645774;
+  border-radius: 12px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 8px;
+}
+
+/* Canvas inside stage (JS קובע סקלת טרנספורם) */
+.lp-canvas {
+  border: 2px dashed #c9c1d4;
+  border-radius: 12px;
   overflow: hidden;
 }
-.landing-preview #canvas {
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-}
 
-/* Fancy actions */
-.panel .actions,
-.section .actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-/* base button */
-.panel .actions button,
-.section .actions button {
-  appearance: none;
-  width: 100%;
-  padding: 12px 16px;
-  border: 0;
-  border-radius: 12px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  cursor: pointer;
-  outline-offset: 3px;
-  transition: transform 0.06s ease, box-shadow 0.2s ease, filter 0.2s ease,
-    background-color 0.2s;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-
-/* primary (first) */
-.panel .actions button:first-child,
-.section .actions button:first-child {
-  color: #fff;
-  background: linear-gradient(180deg, #8bd0c8 0%, #6fb6ae 100%);
-}
-.panel .actions button:first-child:hover,
-.section .actions button:first-child:hover {
-  filter: brightness(1.05);
-}
-.panel .actions button:first-child:active,
-.section .actions button:first-child:active {
-  transform: translateY(1px);
-}
-
-/* outline (second) */
-.panel .actions button:last-child,
-.section .actions button:last-child {
-  color: #80b9b1;
-  background: transparent;
-  border: 2px solid #80b9b1;
-  box-shadow: none;
-}
-.panel .actions button:last-child:hover,
-.section .actions button:last-child:hover {
-  background: rgba(128, 185, 177, 0.08);
-}
-.panel .actions button:last-child:active,
-.section .actions button:last-child:active {
-  transform: translateY(1px);
-}
-
-/* Diagonal placeholder background when bg is empty */
+/* Placeholder surface */
 .placeholder-surface {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgba(255, 255, 255, 0.18) 0 12px,
-    rgba(255, 255, 255, 0.06) 12px 24px
+    rgba(0, 0, 0, 0.06) 0 12px,
+    rgba(0, 0, 0, 0.02) 12px 24px
   );
-  border-radius: 12px;
+  border-radius: 10px;
+}
+.landing-container .section {
+  min-width: 0;
 }
 
-/* ───────── Landing Page layout ───────── */
-.landing-container {
-  display: grid;
-  grid-template-columns: minmax(320px, 440px) 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.landing-preview .section,
-.landing-preview .panel {
-  overflow: hidden;
-}
-
-@media (max-width: 960px) {
+/* Responsive */
+@media (max-width: 900px) {
   .landing-container {
     grid-template-columns: 1fr;
   }

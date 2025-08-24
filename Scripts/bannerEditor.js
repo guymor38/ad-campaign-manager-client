@@ -1,11 +1,9 @@
-// bannerEditor.js
 import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
-import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
   getBanner,
@@ -32,26 +30,20 @@ export function renderBannerEditor(username) {
   const header = renderHeader(
     username,
     (key) => {
-      switch (key) {
-        case "dashboard":
-          renderDashboard(username);
-          break;
-        case "banners":
-          renderBannerEditor(username);
-          break;
-        case "marketing":
-          renderMarketingPage(username);
-          break;
-        case "landing":
-          renderLandingPage(username);
-          break;
+      if (key === "dashboard") {
+        renderDashboard(username);
+      } else if (key === "banners") {
+        renderBannerEditor(username);
+      } else if (key === "marketing") {
+        renderMarketingPage(username);
+      } else if (key === "landing") {
+        renderLandingPage(username);
       }
     },
     () => {
       clearLoggedInUser();
       renderLogin();
-    },
-    "banners" // ← קישור פעיל
+    }
   );
   app.appendChild(header);
 
@@ -81,6 +73,16 @@ export function renderBannerEditor(username) {
       </select>
     </div>
 
+    <!-- יופיע רק ב-t2 -->
+    <div class="field" id="f-dotColor" style="display:none">
+      <label>Dots Color (t2)</label>
+      <input id="dotColor" type="color" />
+    </div>
+    <div class="field" id="f-dotSize" style="display:none">
+      <label>Dots Size (px, t2)</label>
+      <input id="dotSize" type="number" min="1" max="12" placeholder="4" />
+    </div>
+
     <div class="field">
       <label>Headline</label>
       <input id="title" placeholder="POP-UP"/>
@@ -88,7 +90,7 @@ export function renderBannerEditor(username) {
 
     <div class="field">
       <label>Subtitle / Date</label>
-      <input id="subtitle" placeholder="sale or date"/>
+      <input id="subtitle" placeholder="SALE / DATE"/>
     </div>
 
     <div class="field">
@@ -99,16 +101,6 @@ export function renderBannerEditor(username) {
     <div class="field">
       <label>Background</label>
       <input id="bg" type="color" />
-    </div>
-
-    <div class="field">
-      <label>Dots Color (T2)</label>
-      <input id="dotsColor" type="color" />
-    </div>
-
-    <div class="field">
-      <label>Image URL (Template 3)</label>
-      <input id="imgUrl" placeholder="https://..."/>
     </div>
 
     <div class="field">
@@ -131,36 +123,37 @@ export function renderBannerEditor(username) {
   preview.className = "panel preview";
   preview.innerHTML = `
     <h3>Live Preview</h3>
-    <div class="banner-frames">
-      <div class="banner-frame">
-        <div id="prev" class="banner-content tpl placeholder-surface" 
-             style="width:250px;height:250px"></div>
-      </div>
+    <div class="preview-stage" id="banner-stage">
+      <div id="prev" class="banner-content bn"></div>
     </div>
   `;
 
   container.append(controls, preview);
   app.appendChild(container);
 
-  // ===== Refs & state handling (כמו שהיה) =====
+  // ===== Refs =====
   const els = {
     size: controls.querySelector("#size"),
     template: controls.querySelector("#template"),
+    dotColorWrap: controls.querySelector("#f-dotColor"),
+    dotSizeWrap: controls.querySelector("#f-dotSize"),
+    dotColor: controls.querySelector("#dotColor"),
+    dotSize: controls.querySelector("#dotSize"),
     title: controls.querySelector("#title"),
     subtitle: controls.querySelector("#subtitle"),
     body: controls.querySelector("#body"),
     bg: controls.querySelector("#bg"),
     color: controls.querySelector("#color"),
     fontSize: controls.querySelector("#fontSize"),
-    dotsColor: controls.querySelector("#dotsColor"),
-    imgUrl: controls.querySelector("#imgUrl"),
     goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
+    stage: preview.querySelector("#banner-stage"),
     prev: preview.querySelector("#prev"),
   };
 
+  // ===== State helpers =====
   function collectCurrent() {
-    return {
+    const obj = {
       template: els.template.value,
       title: els.title.value.trim(),
       subtitle: els.subtitle.value.trim(),
@@ -168,124 +161,244 @@ export function renderBannerEditor(username) {
       bg: els.bg.value || "",
       color: els.color.value || "",
       fontSize: Number(els.fontSize.value) || 22,
-      dotsColor: els.dotsColor.value || "",
-      imgUrl: els.imgUrl.value || "",
       updatedAt: Date.now(),
     };
+    if (els.template.value === "t2") {
+      if (els.dotColor.value) obj.dotColor = els.dotColor.value;
+      if (els.dotSize.value) obj.dotSize = Number(els.dotSize.value);
+    }
+    return obj;
   }
 
   function loadFor(size) {
     const s = getBanner(size) || {};
     els.template.value = s.template || "t1";
-    els.title.value = s.title || "";
-    els.subtitle.value = s.subtitle || "";
-    els.body.value = s.body || "";
+
+    if (s.dotColor) {
+      els.dotColor.value = s.dotColor;
+    } else {
+      els.dotColor.value = "";
+    }
+    if (s.dotSize) {
+      els.dotSize.value = s.dotSize;
+    } else {
+      els.dotSize.value = "";
+    }
+
+    if (s.title) els.title.value = s.title;
+    else els.title.value = "";
+    if (s.subtitle) els.subtitle.value = s.subtitle;
+    else els.subtitle.value = "";
+    if (s.body) els.body.value = s.body;
+    else els.body.value = "";
     if (s.bg) els.bg.value = s.bg;
+    else els.bg.value = "";
     if (s.color) els.color.value = s.color;
+    else els.color.value = "";
     if (s.fontSize) els.fontSize.value = s.fontSize;
-    if (s.dotsColor) els.dotsColor.value = s.dotsColor;
-    if (s.imgUrl) els.imgUrl.value = s.imgUrl;
+    else els.fontSize.value = "";
+
+    toggleDotsFields();
     render();
   }
 
-  function tplHTML(s) {
-    // T1: Pop-up – אליפסה רכה באמצע
-    if (s.template === "t1") {
-      return `<div style="position:relative;width:100%;height:100%;background:${
-        s.bg || "#d33"
-      };color:${
-        s.color || "#fff"
-      };display:grid;place-items:center;text-align:center;padding:10px;overflow:hidden;">
-        <div style="position:absolute;inset:0;display:grid;place-items:center;">
-          <div style="width:65%;height:65%;background:radial-gradient(circle at 45% 35%, rgba(255,255,255,.9), rgba(255,255,255,.35));border-radius:50%"></div>
-        </div>
-        <div style="position:relative;z-index:1;font-size:${
-          s.fontSize || 22
-        }px;max-width:90%;">
-          <div style="font-weight:800">${s.title || ""}</div>
-          <div style="opacity:.9">${s.subtitle || ""}</div>
-          <div style="opacity:.95">${s.body || ""}</div>
-        </div>
-      </div>`;
+  function toggleDotsFields() {
+    if (els.template.value === "t2") {
+      els.dotColorWrap.style.display = "block";
+      els.dotSizeWrap.style.display = "block";
+    } else {
+      els.dotColorWrap.style.display = "none";
+      els.dotSizeWrap.style.display = "none";
     }
-
-    // T2: Dots Card – נקודות + כרטיס לבן
-    if (s.template === "t2") {
-      const dots = s.dotsColor || "#1aa34a";
-      return `<div style="position:relative;width:100%;height:100%;background:${
-        s.bg || "#d33"
-      };display:grid;place-items:center;overflow:hidden;">
-        <div style="position:absolute;inset:0;background:
-          radial-gradient(circle 6px, ${dots} 99%, transparent 100%) 0 0/34px 34px;"></div>
-        <div style="position:relative;background:#fff;border-radius:16px;padding:14px;min-width:60%;max-width:80%;text-align:center;color:${
-          s.color || "#333"
-        };">
-          <div style="font-weight:800;font-size:${s.fontSize || 22}px">${
-        s.title || ""
-      }</div>
-          <div style="opacity:.9">${s.subtitle || ""}</div>
-          <div style="opacity:.95">${s.body || ""}</div>
-        </div>
-      </div>`;
-    }
-
-    // T3: Real Estate – תמונה בצד וכותרות + CTA
-    const img = s.imgUrl
-      ? `<img src="${s.imgUrl}" alt="" style="width:26%;height:80%;object-fit:cover;border-radius:10px"/>`
-      : `<div style="width:26%;height:80%;border-radius:10px;background:repeating-linear-gradient(45deg, rgba(255,255,255,.4) 0 12px, rgba(255,255,255,.2) 12px 24px)"></div>`;
-
-    return `<div style="position:relative;width:100%;height:100%;background:${
-      s.bg || "#d33"
-    };color:${
-      s.color || "#fff"
-    };display:grid;grid-template-columns:28% 1fr;gap:10px;align-items:center;padding:10px;overflow:hidden;">
-      <div style="display:grid;place-items:center;height:100%">${img}</div>
-      <div style="display:grid;align-content:center;gap:6px;text-align:left">
-        <div style="font-weight:800;font-size:${s.fontSize || 22}px">${
-      s.title || ""
-    }</div>
-        <div style="opacity:.9">${s.subtitle || ""}</div>
-        <div style="opacity:.95">${s.body || ""}</div>
-        <div><span style="display:inline-block;padding:6px 12px;border-radius:10px;background:#111;color:#fff;font-weight:800">CTA</span></div>
-      </div>
-    </div>`;
   }
 
-  function applyToPreview(el, s) {
-    const [w, h] = els.size.value === "300x600" ? [300, 600] : [250, 250];
+  // ===== Template rendering =====
+  function renderBannerInto(el, s, size) {
+    // reset classes
+    el.className = "banner-content bn";
+    if (s.template === "t1") {
+      el.classList.add("bn--t1");
+    } else if (s.template === "t2") {
+      el.classList.add("bn--t2");
+    } else {
+      el.classList.add("bn--t3");
+    }
+
+    // base size
+    let w = 250,
+      h = 250;
+    if (size === "300x600") {
+      w = 300;
+      h = 600;
+    }
     el.style.width = w + "px";
     el.style.height = h + "px";
-    el.classList.toggle("placeholder-surface", !s.bg);
-    el.innerHTML = tplHTML(s);
+
+    // colors / font
+    let txt = "#1c1a26";
+    if (s.color && s.color.trim()) {
+      txt = s.color;
+    }
+    el.style.color = txt;
+
+    let fpx = 22;
+    if (s.fontSize && Number(s.fontSize)) {
+      fpx = Number(s.fontSize);
+    }
+    el.style.fontSize = fpx + "px";
+
+    // background
+    if (s.template === "t2") {
+      let bg = "#ffffff";
+      if (s.bg && s.bg.trim()) {
+        bg = s.bg;
+      }
+      let dots = "#222222";
+      if (s.dotColor && s.dotColor.trim()) {
+        dots = s.dotColor;
+      }
+      let r = 4;
+      if (s.dotSize && Number(s.dotSize)) {
+        r = Number(s.dotSize);
+      }
+      const step = Math.max(12, r * 6);
+
+      el.style.background = bg;
+      el.style.backgroundImage = `repeating-radial-gradient(${dots} 0 ${r}px, transparent ${r}px ${step}px)`;
+      el.style.backgroundSize = step + "px " + step + "px";
+      el.style.backgroundPosition = "0 0";
+    } else {
+      if (s.bg && s.bg.trim()) {
+        el.style.background = s.bg;
+      } else {
+        el.style.background = "#ffffff";
+      }
+      el.style.backgroundImage = "none";
+    }
+
+    // content
+    let titleText = "";
+    if (s.title) {
+      titleText = s.title;
+    }
+    let subtitleText = "";
+    if (s.subtitle) {
+      subtitleText = s.subtitle;
+    }
+    let bodyText = "";
+    if (s.body) {
+      bodyText = s.body;
+    }
+
+    let inner = "";
+    if (s.template === "t1") {
+      inner = `
+        <div class="bn__inner t1">
+          <div class="bn__title">${titleText}</div>
+          <div class="bn__subtitle">${subtitleText}</div>
+          <div class="bn__body">${bodyText}</div>
+        </div>
+      `;
+    } else if (s.template === "t2") {
+      inner = `
+        <div class="bn__inner t2">
+          <div class="bn__card">
+            <div class="bn__title">${titleText}</div>
+            <div class="bn__subtitle">${subtitleText}</div>
+            <div class="bn__body">${bodyText}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      inner = `
+        <div class="bn__inner t3">
+          <div class="bn__bar"></div>
+          <div class="bn__stack">
+            <div class="bn__title">${titleText}</div>
+            <div class="bn__subtitle">${subtitleText}</div>
+            <div class="bn__body">${bodyText}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    el.innerHTML = inner;
+  }
+
+  // === scale to fit stage ===
+  function fitBanner() {
+    const box = els.stage.getBoundingClientRect();
+    const size = els.size.value;
+    let w = 250,
+      h = 250;
+    if (size === "300x600") {
+      w = 300;
+      h = 600;
+    }
+
+    els.prev.style.transformOrigin = "top left";
+    const pad = 16;
+    const scaleW = (box.width - pad) / w;
+    const scaleH = (box.height - pad) / h;
+    let scale = scaleW;
+    if (scaleH < scale) {
+      scale = scaleH;
+    }
+    if (scale > 1.6) {
+      scale = 1.6;
+    }
+    if (scale < 0.1) {
+      scale = 0.1;
+    }
+    els.prev.style.transform = "scale(" + scale + ")";
   }
 
   function render() {
-    const s = getBanner(els.size.value) || collectCurrent();
-    applyToPreview(els.prev, s);
+    const size = els.size.value;
+    let s = getBanner(size);
+    if (!s) {
+      s = collectCurrent();
+    }
+    renderBannerInto(els.prev, s, size);
+    fitBanner();
   }
 
   function persist() {
-    saveBanner(els.size.value, collectCurrent());
+    const payload = collectCurrent();
+    saveBanner(els.size.value, payload);
   }
 
-  [
+  function onAnyChange() {
+    persist();
+    render();
+  }
+
+  // events
+  const inputs = [
     els.template,
+    els.dotColor,
+    els.dotSize,
     els.title,
     els.subtitle,
     els.body,
     els.bg,
     els.color,
     els.fontSize,
-    els.dotsColor,
-    els.imgUrl,
-  ].forEach((inp) =>
+  ];
+  for (let i = 0; i < inputs.length; i++) {
+    const inp = inputs[i];
+    if (!inp) continue;
     inp.addEventListener("input", () => {
-      persist();
-      render();
-    })
-  );
+      if (inp === els.template) {
+        toggleDotsFields();
+      }
+      onAnyChange();
+    });
+  }
 
-  els.size.addEventListener("change", () => loadFor(els.size.value));
+  els.size.addEventListener("change", () => {
+    loadFor(els.size.value);
+  });
 
   els.reset.addEventListener("click", () => {
     resetBanner(els.size.value);
@@ -301,27 +414,27 @@ export function renderBannerEditor(username) {
     setBannerActive(size, true);
     toast("Published");
 
-    // איפוס מקומי לטופס
-    [
-      "title",
-      "subtitle",
-      "body",
-      "bg",
-      "color",
-      "fontSize",
-      "dotsColor",
-      "imgUrl",
-    ].forEach((k) => {
-      if (els[k]) els[k].value = "";
-    });
+    // ניקה טופס (כדי ליצור באנר חדש)
+    els.title.value = "";
+    els.subtitle.value = "";
+    els.body.value = "";
+    els.bg.value = "";
+    els.color.value = "";
+    els.fontSize.value = "";
+    els.dotColor.value = "";
+    els.dotSize.value = "";
 
-    els.size.value = size === "250x250" ? "300x600" : "250x250";
+    // עבור אוטומטית לגודל השני
+    if (size === "250x250") {
+      els.size.value = "300x600";
+    } else {
+      els.size.value = "250x250";
+    }
     loadFor(els.size.value);
   });
 
+  window.addEventListener("resize", fitBanner);
+
+  // init
   loadFor(els.size.value);
-
-  // פוטר
-  app.append(renderFooter());
 }
-
