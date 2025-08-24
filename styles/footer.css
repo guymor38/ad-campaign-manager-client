@@ -1,0 +1,27 @@
+/* footer.css */
+.footer {
+  margin-top: 48px;
+  background: #2c2633; /* כמו ההדר */
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #eaeaea;
+}
+
+.footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.footer__brand {
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.footer__right {
+  opacity: 0.85;
+}

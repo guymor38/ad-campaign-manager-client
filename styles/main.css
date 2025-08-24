@@ -1,14 +1,13 @@
-/* Main styles for the application */
-@import url("./utilities.css");
+/* main.css */
 @import url("./reset.css");
+@import url("./utilities.css");
+
 @import url("./login.css");
 @import url("./register.css");
 @import url("./dashboard.css");
 @import url("./bannerEditor.css");
 @import url("./marketing.css");
 @import url("./landingPage.css");
-@import url("./header.css");
+@import url("./footer.css");
 
-
-
-
+@import url("./header.css"); /* אחרון - כדי שישלוט בסרגל העליון */

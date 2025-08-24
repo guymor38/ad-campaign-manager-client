@@ -12,16 +12,16 @@
   align-items: center;
   gap: 16px;
 
-  background: #2c2633; /* פס כהה, אלגנטי */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #2c2633; /* פס כהה */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(6px);
 }
 
-/* ─── Left cluster ──────────────────────────────────────────────────────── */
+/* ─── Left cluster ─────────────────────────────────────────────────────── */
 .header__left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .logo {
@@ -31,35 +31,30 @@
   letter-spacing: 0.5px;
 }
 
-/* ─── Nav ──────────────────────────────────────────────────────────────── */
+/* ─── Nav: קישורים לבנים פשוטים ─────────────────────────────────────── */
 .nav {
   display: flex;
-  gap: 10px;
+  gap: 28px;
   flex-wrap: wrap;
 }
 
-.nav button {
-  appearance: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: #80b9b1;
-  color: #1c1a26;
-  font-weight: 700;
-  box-shadow: 2px 2px 4px #514864;
-  transition: transform 0.08s ease, filter 0.12s ease;
+.nav__link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  opacity: 0.95;
+  letter-spacing: 0.2px;
+  position: relative;
+  padding: 2px 0;
 }
 
-.nav button:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
-}
-.nav button:active {
-  transform: translateY(0);
+.nav__link:hover,
+.nav__link:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
 }
 
-/* ─── Right cluster (avatar + logout) ───────────────────────────────────── */
+/* ─── Right cluster (avatar + logout) ──────────────────────────────────── */
 .header__right {
   display: flex;
   align-items: center;
@@ -71,7 +66,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #fff; /* עיגול לבן */
+  background: #fff;
   color: #1c1a26;
   display: grid;
   place-items: center;
@@ -98,7 +93,7 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* ─── Responsive ───────────────────────────────────────────────────────── */
+/* ─── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .header {
     grid-template-columns: 1fr auto; /* [logo+nav] | [avatar+logout] */
@@ -108,6 +103,13 @@
     flex-wrap: wrap;
   }
   .nav {
-    flex: 1 1 100%;
+    gap: 16px;
   }
+}
+
+/* קישור אקטיבי – קו תחתון קבוע */
+.nav__link--active {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
 }
