@@ -176,3 +176,21 @@
     min-height: 280px;
   }
 }
+
+/* ───────── Banner Editor layout ───────── */
+.banner-editor-container {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) 1fr; /* שמאל: טופס, ימין: פריוויו */
+  gap: 24px;
+  align-items: start;
+}
+
+.banner-editor-container .panel.preview {
+  min-height: 360px;
+}
+
+@media (max-width: 960px) {
+  .banner-editor-container {
+    grid-template-columns: 1fr; /* במובייל: אחד מתחת לשני */
+  }
+}

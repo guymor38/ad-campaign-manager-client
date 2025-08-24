@@ -3,24 +3,18 @@ export function renderHeader(
   username,
   onNavigate,
   onLogout,
-  activeKey = "dashboard"
+  currentKey = "dashboard"
 ) {
   const header = document.createElement("header");
   header.className = "header";
 
-  // ===== Left: logo + nav =====
+  // --- Left cluster: Logo + Nav ---
   const left = document.createElement("div");
   left.className = "header__left";
 
   const logo = document.createElement("h2");
   logo.className = "logo";
   logo.textContent = "Bannerist";
-  logo.title = "Home";
-  logo.style.cursor = "pointer";
-  logo.addEventListener("click", (e) => {
-    e.preventDefault();
-    onNavigate("dashboard");
-  });
 
   const nav = document.createElement("nav");
   nav.className = "nav";
@@ -34,43 +28,23 @@ export function renderHeader(
 
   pages.forEach(({ key, label }) => {
     const a = document.createElement("a");
-    a.href = "#";
-    a.className = "nav__link";
-    a.dataset.key = key;
+    a.href = "javascript:void(0)";
     a.textContent = label;
-
-    // מסמן אקטיבי לפי הדף שקיבלנו בפונקציה
-    if (key === activeKey) a.classList.add("nav__link--active");
-
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      // פידבק מיידי לפני שהעמוד נבנה מחדש
-      nav
-        .querySelectorAll(".nav__link")
-        .forEach((el) => el.classList.remove("nav__link--active"));
-      a.classList.add("nav__link--active");
-      onNavigate(key);
-    });
+    a.className =
+      "nav__link" + (key === currentKey ? " nav__link--active" : "");
+    a.addEventListener("click", () => onNavigate(key));
     nav.appendChild(a);
   });
 
   left.append(logo, nav);
 
-  // ===== Right: avatar + logout =====
+  // --- Right cluster: Avatar + Logout ---
   const right = document.createElement("div");
   right.className = "header__right";
 
   const avatar = document.createElement("div");
   avatar.className = "avatar";
-  const initials =
-    (username || "")
-      .trim()
-      .split(/\s+/)
-      .map((w) => w[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "U";
-  avatar.textContent = initials;
+  avatar.textContent = (username || "?").slice(0, 2).toUpperCase();
 
   const logoutBtn = document.createElement("button");
   logoutBtn.className = "btn btn--ghost";
@@ -79,6 +53,9 @@ export function renderHeader(
 
   right.append(avatar, logoutBtn);
 
-  header.append(left, document.createElement("div"), right);
+  // spacer באמצע כדי לדחוף את הימין לשוליים
+  const spacer = document.createElement("div");
+
+  header.append(left, spacer, right);
   return header;
 }

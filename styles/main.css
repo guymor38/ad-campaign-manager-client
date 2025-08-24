@@ -1,13 +1,19 @@
-/* main.css */
-@import url("./reset.css");
-@import url("./utilities.css");
+/* main.css — imports only */
 
+/* reset / basics */
+@import url("./reset.css");
+
+/* pages */
 @import url("./login.css");
 @import url("./register.css");
 @import url("./dashboard.css");
 @import url("./bannerEditor.css");
 @import url("./marketing.css");
 @import url("./landingPage.css");
+
+/* layout chrome */
+@import url("./header.css");
 @import url("./footer.css");
 
-@import url("./header.css"); /* אחרון - כדי שישלוט בסרגל העליון */
+/* MUST BE LAST: layout glue & overrides */
+@import url("./utilities.css");

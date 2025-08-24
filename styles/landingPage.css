@@ -141,3 +141,22 @@
   );
   border-radius: 12px;
 }
+
+/* ───────── Landing Page layout ───────── */
+.landing-container {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.landing-preview .section,
+.landing-preview .panel {
+  overflow: hidden;
+}
+
+@media (max-width: 960px) {
+  .landing-container {
+    grid-template-columns: 1fr;
+  }
+}

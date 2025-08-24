@@ -1,0 +1,34 @@
+/* app-layout.css */
+html,
+body {
+  height: 100%;
+}
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh; /* בטוח למוביילים */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* header/footer לא נמתחים */
+header.header,
+footer.footer {
+  flex: 0 0 auto;
+}
+
+/* אזור התוכן כן נמתח */
+.page,
+.dashboard-container,
+.banner-editor-container,
+.marketing-container,
+.landing-container {
+  flex: 1 0 auto;
+  display: block;
+  padding-bottom: 12px; /* רווח קטן מעל הפוטר */
+}

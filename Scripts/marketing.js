@@ -1,9 +1,11 @@
-import { loadStyle, showToast, el } from "./utils.js";
+// marketing.js
+import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderLandingPage } from "./landingPage.js";
 import { renderBannerEditor } from "./bannerEditor.js";
+import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
   getMarketingPage,
@@ -11,13 +13,20 @@ import {
   setMarketingActive,
 } from "./storage.js";
 
+function toast(msg, warn = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (warn ? " warn" : "");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1600);
+}
+
 export function renderMarketingPage(username) {
   loadStyle("./styles/main.css");
 
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header
   const header = renderHeader(
     username,
     (key) => {
@@ -39,13 +48,15 @@ export function renderMarketingPage(username) {
     () => {
       clearLoggedInUser();
       renderLogin();
-    }
+    },
+    "marketing" // ← קישור פעיל
   );
-  app.appendChild(header);
 
-  // Layout
-  const container = el("div", "marketing-container");
-  const controls = el("div", "panel");
+  const container = document.createElement("div");
+  container.className = "marketing-container";
+
+  const controls = document.createElement("div");
+  controls.className = "panel";
   controls.innerHTML = `
     <h2>Email Builder</h2>
     <p style="opacity:.85;margin:6px 0 12px">רוחב קבוע 650px · שמירה אוטומטית</p>
@@ -83,22 +94,37 @@ export function renderMarketingPage(username) {
       </div>
     </div>
 
-    <div class="actions form-actions">
-      <button id="go" class="btn btn--primary" type="button">Go live</button>
-      <button id="reset" class="btn btn--ghost" type="button">Reset</button>
+    <div class="actions">
+      <button id="go-live">Go live</button>
+      <button id="reset">Reset</button>
     </div>
   `;
 
-  const preview = el("div", "panel");
+  const preview = document.createElement("div");
+  preview.className = "panel";
   preview.innerHTML = `
     <h3 style="margin-bottom:10px">Live Preview (650px)</h3>
     <div class="email-canvas placeholder-surface" id="email"></div>
   `;
 
   container.append(controls, preview);
-  app.appendChild(container);
+  app.append(header, container);
 
-  // Refs
+  const DEF = {
+    tpl: "t1",
+    title: "",
+    subtitle: "",
+    body: "",
+    imgUrl: "",
+    ctaText: "",
+    ctaUrl: "",
+    bg: "",
+    color: "",
+    accent: "",
+    font: "system-ui, -apple-system, Segoe UI, Roboto",
+  };
+  const state = Object.assign({}, DEF, getMarketingPage() || {});
+
   const els = {
     tpl: controls.querySelector("#tpl"),
     title: controls.querySelector("#title"),
@@ -112,33 +138,19 @@ export function renderMarketingPage(username) {
     accent: controls.querySelector("#accent"),
     font: controls.querySelector("#font"),
     email: preview.querySelector("#email"),
-    go: controls.querySelector("#go"),
+    goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
   };
 
-  // Helpers
-  const DEMO = {
-    font: "system-ui, -apple-system, Segoe UI, Roboto",
-  };
-
-  const readForm = () => ({
-    tpl: els.tpl.value,
-    title: els.title.value.trim(),
-    subtitle: els.subtitle.value.trim(),
-    body: els.body.value.trim(),
-    imgUrl: els.imgUrl.value.trim(),
-    ctaText: els.ctaText.value.trim(),
-    ctaUrl: els.ctaUrl.value.trim(),
-    bg: els.bg.value || "",
-    color: els.color.value || "",
-    accent: els.accent.value || "",
-    font: els.font.value || DEMO.font,
+  Object.entries(state).forEach(([k, v]) => {
+    if (els[k] && v) els[k].value = v;
   });
 
-  const emailHTML = (s) => {
+  function emailHTML(s) {
     const base = `
-      background:${s.bg || "transparent"}; color:${s.color || "#333"};
-      font-family:${s.font};
+      background:${s.bg || "transparent"}; color:${
+      s.color || "#333"
+    }; font-family:${s.font};
       width:650px; margin:0 auto; line-height:1.5; padding:18px;
     `;
     const img = s.imgUrl
@@ -181,70 +193,63 @@ export function renderMarketingPage(username) {
       <p style="margin:0 0 16px">${s.body || ""}</p>
       ${btn(s.ctaText, s.ctaUrl)}
     </div>`;
-  };
+  }
 
   function render() {
-    const s = readForm();
-    const elx = els.email;
-    if (s.bg) elx.classList.remove("placeholder-surface");
-    else elx.classList.add("placeholder-surface");
-    elx.innerHTML = emailHTML(s);
+    const s = state;
+    const el = els.email;
+    if (s.bg) el.classList.remove("placeholder-surface");
+    else el.classList.add("placeholder-surface");
+    el.innerHTML = emailHTML(s);
+  }
+  function persist() {
+    saveMarketingPage(state);
   }
 
-  function persist(active = false) {
-    const data = { ...readForm() };
-    if (active) data.active = true;
-    saveMarketingPage(data);
-  }
-
-  function resetForm() {
-    ["title", "subtitle", "body", "imgUrl", "ctaText", "ctaUrl"].forEach(
-      (id) => (els[id].value = "")
-    );
-    els.bg.value = "";
-    els.color.value = "";
-    els.accent.value = "";
-    render();
-  }
-
-  // Load existing (שומר placeholder אם אין ערך)
-  const saved = getMarketingPage() || {};
-  els.tpl.value = saved.tpl || "t1";
-  els.font.value = saved.font || DEMO.font;
-  els.bg.value = saved.bg || "";
-  els.color.value = saved.color || "";
-  els.accent.value = saved.accent || "";
-  render();
-
-  // Events
-  [
-    "tpl",
-    "title",
-    "subtitle",
-    "body",
-    "imgUrl",
-    "ctaText",
-    "ctaUrl",
-    "bg",
-    "color",
-    "accent",
-    "font",
-  ].forEach((k) =>
+  Object.keys(state).forEach((k) => {
+    if (!els[k]) return;
     els[k].addEventListener("input", () => {
-      persist(false);
+      state[k] = els[k].value;
       render();
-    })
-  );
-
-  els.go.addEventListener("click", () => {
-    persist(true);
-    setMarketingActive(true);
-    showToast("Published email");
-    resetForm();
+      persist();
+      toast("Saved");
+    });
   });
 
   els.reset.addEventListener("click", () => {
-    resetForm();
-    showToast("Reset");
+    Object.assign(state, { ...DEF, font: state.font || DEF.font });
+    Object.keys(state).forEach((k) => {
+      if (els[k]) els[k].value = state[k] || "";
+    });
+    render();
+    persist();
+    toast("Reset");
   });
+
+  els.goLive.addEventListener("click", () => {
+    state.active = true;
+    saveMarketingPage(state);
+    setMarketingActive(true);
+    toast("Published");
+    [
+      "title",
+      "subtitle",
+      "body",
+      "imgUrl",
+      "ctaText",
+      "ctaUrl",
+      "bg",
+      "color",
+      "accent",
+    ].forEach((k) => {
+      state[k] = "";
+      if (els[k]) els[k].value = "";
+    });
+    render();
+  });
+
+  render();
+
+  // פוטר
+  app.append(renderFooter());
 }

@@ -1,15 +1,25 @@
-import { loadStyle, showToast, el } from "./utils.js";
+// landingPage.js
+import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderBannerEditor } from "./bannerEditor.js";
+import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
   getLandingPage,
   saveLandingPage,
   setLandingActive,
 } from "./storage.js";
+
+function toast(msg, warn = false) {
+  const t = document.createElement("div");
+  t.className = "toast" + (warn ? " warn" : "");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1600);
+}
 
 export function renderLandingPage(username) {
   loadStyle("./styles/main.css");
@@ -33,19 +43,22 @@ export function renderLandingPage(username) {
         case "landing":
           renderLandingPage(username);
           break;
+        default:
+          console.warn("Unknown page:", key);
       }
     },
     () => {
       clearLoggedInUser();
       renderLogin();
-    }
+    },
+    "landing" // ← קישור פעיל
   );
-  app.appendChild(header);
 
-  const container = el("div", "landing-container");
+  const container = document.createElement("div");
+  container.className = "landing-container";
 
-  // Controls
-  const controls = el("div", "section");
+  const controls = document.createElement("div");
+  controls.className = "section";
   controls.innerHTML = `
     <h2 style="margin-bottom:10px">Landing Page Builder</h2>
     <p style="opacity:.85;margin:0 0 12px">תצוגה חיה ושמירה אוטומטית</p>
@@ -87,19 +100,36 @@ export function renderLandingPage(username) {
       <div class="field"><label>Submit Button</label><input id="leadBtn" placeholder="Sign Up"/></div>
     </div>
 
-    <div class="actions form-actions">
-      <button id="go" class="btn btn--primary" type="button">Go live</button>
-      <button id="reset" class="btn btn--ghost" type="button">Reset</button>
+    <div class="actions">
+      <button id="go-live">Go live</button>
+      <button id="reset">Reset</button>
     </div>
   `;
 
-  const preview = el("div", "section landing-preview");
+  const preview = document.createElement("div");
+  preview.className = "section landing-preview";
   preview.innerHTML = `<div id="canvas" class="placeholder-surface" aria-label="landing preview"></div>`;
 
   container.append(controls, preview);
-  app.appendChild(container);
+  app.append(header, container);
 
-  // Refs + defaults
+  const DEF = {
+    tpl: "t1",
+    title: "",
+    subtitle: "",
+    body: "",
+    imgUrl: "",
+    ctaText: "",
+    ctaUrl: "",
+    bg: "",
+    color: "",
+    accent: "",
+    font: "system-ui, -apple-system, Segoe UI, Roboto",
+    leadTitle: "",
+    leadBtn: "",
+  };
+  const state = Object.assign({}, DEF, getLandingPage() || {});
+
   const els = {
     tpl: controls.querySelector("#tpl"),
     title: controls.querySelector("#title"),
@@ -115,36 +145,20 @@ export function renderLandingPage(username) {
     leadTitle: controls.querySelector("#leadTitle"),
     leadBtn: controls.querySelector("#leadBtn"),
     canvas: preview.querySelector("#canvas"),
-    go: controls.querySelector("#go"),
+    goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
   };
 
-  const DEMO = { font: "system-ui, -apple-system, Segoe UI, Roboto" };
-
-  const readForm = () => ({
-    tpl: els.tpl.value,
-    title: els.title.value.trim(),
-    subtitle: els.subtitle.value.trim(),
-    body: els.body.value.trim(),
-    imgUrl: els.imgUrl.value.trim(),
-    ctaText: els.ctaText.value.trim(),
-    ctaUrl: els.ctaUrl.value.trim(),
-    bg: els.bg.value || "",
-    color: els.color.value || "",
-    accent: els.accent.value || "",
-    font: els.font.value || DEMO.font,
-    leadTitle: els.leadTitle.value.trim(),
-    leadBtn: els.leadBtn.value.trim(),
+  Object.entries(state).forEach(([k, v]) => {
+    if (els[k] && v) els[k].value = v;
   });
 
   const btn = (text, url, accent) =>
-    `<a href="${url || "#"}"
-       style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
-         accent || "#2d89ef"
-       };
-              color:#fff;text-decoration:none;font-weight:700">${
-                text || "CTA"
-              }</a>`;
+    `<a href="${
+      url || "#"
+    }" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
+      accent || "#2d89ef"
+    };color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
 
   const leadForm = (title, btnText, accent) => `
     <form onsubmit="return false" style="margin-top:16px; display:grid; gap:10px">
@@ -153,17 +167,19 @@ export function renderLandingPage(username) {
       <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
       <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${
         accent || "#2d89ef"
-      };
-              color:#fff;font-weight:700;cursor:pointer">${
-                btnText || "Submit"
-              }</button>
-    </form>`;
+      };color:#fff;font-weight:700;cursor:pointer">${
+    btnText || "Submit"
+  }</button>
+    </form>
+  `;
 
-  const renderTpl = (s) => {
+  function renderTpl(s) {
     const shell = `
-      background:${s.bg || "transparent"}; color:${s.color || "#333"};
-      font-family:${s.font};
-      width:100%; max-width:1000px; margin:0 auto; line-height:1.5; padding:18px;`;
+      background:${s.bg || "transparent"}; color:${
+      s.color || "#333"
+    }; font-family:${s.font};
+      width:100%; max-width:1000px; margin:0 auto; line-height:1.5; padding:18px;
+    `;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 14px;border-radius:12px"/>`
       : "";
@@ -188,23 +204,23 @@ export function renderLandingPage(username) {
     }
     if (s.tpl === "t3") {
       return `
-        <div style="${shell}">
-          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:18px">
-            <div>
-              <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-              <h3 style="margin:0 0 12px;opacity:.85">${s.subtitle || ""}</h3>
-              <p style="margin:0 0 16px">${s.body || ""}</p>
-              ${btn(s.ctaText, s.ctaUrl, s.accent)}
-              ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
-            </div>
-            <div>
-              ${
-                img ||
-                `<div style="height:260px;display:grid;place-items:center;color:#888;background:rgba(0,0,0,.05);border-radius:12px">Image</div>`
-              }
-            </div>
+      <div style="${shell}">
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:18px">
+          <div>
+            <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+            <h3 style="margin:0 0 12px;opacity:.85">${s.subtitle || ""}</h3>
+            <p style="margin:0 0 16px">${s.body || ""}</p>
+            ${btn(s.ctaText, s.ctaUrl, s.accent)}
+            ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
           </div>
-        </div>`;
+          <div>
+            ${
+              img ||
+              `<div style="height:260px;display:grid;place-items:center;color:#888;background:rgba(0,0,0,.05);border-radius:12px">Image</div>`
+            }
+          </div>
+        </div>
+      </div>`;
     }
     return `
       <div style="${shell}">
@@ -215,19 +231,40 @@ export function renderLandingPage(username) {
         ${btn(s.ctaText, s.ctaUrl, s.accent)}
         ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
       </div>`;
-  };
+  }
 
   function render() {
-    els.canvas.innerHTML = renderTpl(readForm());
+    els.canvas.innerHTML = renderTpl(state);
+  }
+  function persist() {
+    saveLandingPage(state);
   }
 
-  function persist(active = false) {
-    const data = { ...readForm() };
-    if (active) data.active = true;
-    saveLandingPage(data);
-  }
+  Object.keys(state).forEach((k) => {
+    if (!els[k]) return;
+    els[k].addEventListener("input", () => {
+      state[k] = els[k].value;
+      render();
+      persist();
+      toast("Saved");
+    });
+  });
 
-  function resetForm() {
+  els.reset.addEventListener("click", () => {
+    Object.assign(state, { ...DEF });
+    Object.keys(state).forEach((k) => {
+      if (els[k]) els[k].value = state[k] || "";
+    });
+    render();
+    persist();
+    toast("Reset");
+  });
+
+  els.goLive.addEventListener("click", () => {
+    state.active = true;
+    saveLandingPage(state);
+    setLandingActive(true);
+    toast("Published");
     [
       "title",
       "subtitle",
@@ -235,55 +272,20 @@ export function renderLandingPage(username) {
       "imgUrl",
       "ctaText",
       "ctaUrl",
+      "bg",
+      "color",
+      "accent",
       "leadTitle",
       "leadBtn",
-    ].forEach((id) => (els[id].value = ""));
-    els.bg.value = "";
-    els.color.value = "";
-    els.accent.value = "";
+    ].forEach((k) => {
+      state[k] = "";
+      if (els[k]) els[k].value = "";
+    });
     render();
-  }
+  });
 
-  // Load saved
-  const saved = getLandingPage() || {};
-  els.tpl.value = saved.tpl || "t1";
-  els.font.value = saved.font || DEMO.font;
-  els.bg.value = saved.bg || "";
-  els.color.value = saved.color || "";
-  els.accent.value = saved.accent || "";
   render();
 
-  // Events
-  [
-    "tpl",
-    "title",
-    "subtitle",
-    "body",
-    "imgUrl",
-    "ctaText",
-    "ctaUrl",
-    "bg",
-    "color",
-    "accent",
-    "font",
-    "leadTitle",
-    "leadBtn",
-  ].forEach((k) =>
-    els[k].addEventListener("input", () => {
-      persist(false);
-      render();
-    })
-  );
-
-  els.go.addEventListener("click", () => {
-    persist(true);
-    setLandingActive(true);
-    showToast("Published landing");
-    resetForm();
-  });
-
-  els.reset.addEventListener("click", () => {
-    resetForm();
-    showToast("Reset");
-  });
+  // פוטר
+  app.append(renderFooter());
 }

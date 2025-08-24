@@ -1,6 +1,6 @@
 /* header.css */
 
-/* ─── Bar ───────────────────────────────────────────────────────────────── */
+/* ─── Bar ─────────────────────────────────────────────────────────────── */
 .header {
   position: sticky;
   top: 0;
@@ -13,11 +13,11 @@
   gap: 16px;
 
   background: #2c2633; /* פס כהה */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(6px);
 }
 
-/* ─── Left cluster ─────────────────────────────────────────────────────── */
+/* ─── Left cluster ───────────────────────────────────────────────────── */
 .header__left {
   display: flex;
   align-items: center;
@@ -31,10 +31,10 @@
   letter-spacing: 0.5px;
 }
 
-/* ─── Nav: קישורים לבנים פשוטים ─────────────────────────────────────── */
+/* ─── Nav: קישורים לבנים פשוטים ───────────────────────────────────── */
 .nav {
   display: flex;
-  gap: 28px;
+  gap: 24px;
   flex-wrap: wrap;
 }
 
@@ -42,19 +42,20 @@
   color: #fff;
   text-decoration: none;
   font-weight: 600;
-  opacity: 0.95;
-  letter-spacing: 0.2px;
-  position: relative;
-  padding: 2px 0;
+  opacity: 0.9;
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
 }
-
-.nav__link:hover,
-.nav__link:focus-visible {
+.nav__link:hover {
   opacity: 1;
-  text-decoration: underline;
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+}
+.nav__link--active {
+  border-bottom-color: #ffffff;
 }
 
-/* ─── Right cluster (avatar + logout) ──────────────────────────────────── */
+/* ─── Right cluster (avatar + logout) ─────────────────────────────────── */
 .header__right {
   display: flex;
   align-items: center;
@@ -83,7 +84,6 @@
   cursor: pointer;
   box-shadow: 2px 2px 4px #514864;
 }
-
 .btn--ghost {
   background: transparent;
   color: #80b9b1;
@@ -93,10 +93,10 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* ─── Responsive ──────────────────────────────────────────────────────── */
+/* ─── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .header {
-    grid-template-columns: 1fr auto; /* [logo+nav] | [avatar+logout] */
+    grid-template-columns: 1fr auto;
     row-gap: 10px;
   }
   .header__left {
@@ -105,11 +105,4 @@
   .nav {
     gap: 16px;
   }
-}
-
-/* קישור אקטיבי – קו תחתון קבוע */
-.nav__link--active {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 2px;
 }

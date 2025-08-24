@@ -141,3 +141,17 @@
   );
   border-radius: 12px;
 }
+
+/* ───────── Marketing layout ───────── */
+.marketing-container {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .marketing-container {
+    grid-template-columns: 1fr;
+  }
+}

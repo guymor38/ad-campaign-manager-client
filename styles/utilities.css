@@ -1,73 +1,173 @@
-/* Utilities – גרידים כלליים שנוח להשתמש בהם */
-.grid {
-  display: grid;
-  gap: 16px;
-}
-.grid--auto {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+/* utilities.css — Layout glue + תיקוני overflow  */
+
+/* שורש */
+html,
+body {
+  height: 100%;
 }
 
-/* Toast (Saved / Published) */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%) translateY(10px);
-  padding: 10px 14px;
-  background: #2e7d32; /* ירוק */
-  color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  font-weight: 700;
-  opacity: 0;
-  z-index: 9999;
-  animation: toast-in 0.18s ease-out forwards,
-    toast-out 0.25s ease-in 1.2s forwards;
-}
-.toast.warn {
-  background: #c62828;
-} /* אדום רך */
-
-@keyframes toast-in {
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-@keyframes toast-out {
-  to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(12px);
-  }
+/* ה-App עובר למבנה עמוד גמיש: Header | Content | Footer */
+#app {
+  min-height: 100dvh; /* בטוח גם במובייל */
+  display: flex;
+  flex-direction: column;
 }
 
-/* כפתורי טפסים כלליים + יישור בשורה */
-.form-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 12px;
+/* חלוקת השכבות */
+#app > header {
+  flex: 0 0 auto;
 }
-.btn {
-  border: none;
-  padding: 12px 14px;
+#app > .footer {
+  flex: 0 0 auto;
+}
+
+/* אזור התוכן של כל עמוד: תופס את כל השאר, בלי לייצר גלילה אם אין צורך */
+#app > .dashboard-container,
+#app > .banner-editor-container,
+#app > .marketing-container,
+#app > .landing-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  min-height: 0; /* מונע overflow פנימי */
+}
+
+/* דקאורטיבי קיים */
+.placeholder-surface {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.18) 0 12px,
+    rgba(255, 255, 255, 0.06) 12px 24px
+  );
   border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 2px 2px 4px #645774;
 }
-.btn--primary {
-  background: #80b9b1;
-  color: #fff;
+
+/* ===== Dashboard grid ===== */
+.dashboard-container {
+  width: 100%;
 }
-.btn--primary:hover {
-  filter: brightness(0.95);
+
+.dashboard-grid {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap: 20px;
+  align-items: start;
 }
-.btn--ghost {
-  background: transparent;
-  color: #80b9b1;
-  border: 2px solid #80b9b1;
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
 }
-.btn--ghost:hover {
+@media (max-width: 720px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+  overflow: hidden;
+}
+.dashboard-card h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  color: #80b9b1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #80b9b1;
+  color: #1c1a26;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.dashboard-card > :last-child {
+  margin: 4px auto 0;
+  max-width: 100%;
+}
+
+/* ===== ביטול min-height/גובה קשיח שעשוי לגרום לגלילה מיותרת ===== */
+/* אין לנו צורך ב-min-height לפאנלים והפריוויואים – שיישבו לפי תוכן */
+.panel,
+.section {
+  min-height: auto;
+}
+.landing-preview,
+.email-canvas,
+.banner-frames {
+  min-height: 0;
+  height: auto;
+}
+
+/* למנוע מרווח תחתון אחרון שמדביק גלילה */
+#app > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ───────────────── Global Layout ───────────────── */
+
+/* כדי שהפוטר תמיד יהיה בתחתית, והדף יתפוס את כל הגובה */
+html,
+body {
+  height: 100%;
+}
+#app {
+  min-height: 100svh; /* 100% גובה מסך בטוח */
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* header | content | footer */
+}
+
+/* ממרכזים ומגבילים רוחב של כל עמודי האפליקציה */
+:where(
+    .dashboard-container,
+    .banner-editor-container,
+    .marketing-container,
+    .landing-container
+  ) {
+  width: min(1200px, calc(100% - 48px)); /* Padding כולל 24px מכל צד */
+  margin-inline: auto;
+  padding-block: 24px;
+}
+
+/* מראה בסיסי אחיד לפאנלים/כרטיסים */
+.panel,
+.section,
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* למנוע גלילה/גלילה צדדית אם התצוגה המוקטנת גדולה מהכרטיס */
+.panel.preview,
+.dashboard-card {
+  overflow: hidden;
+}
+
+/* משטח placeholder משוּרְטט – לא חובה אבל שימושי */
+.placeholder-surface {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.18) 0 12px,
+    rgba(255, 255, 255, 0.06) 12px 24px
+  );
+  border-radius: 12px;
 }
