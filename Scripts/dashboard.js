@@ -13,6 +13,8 @@ import {
   setBannerActive,
   setMarketingActive,
   setLandingActive,
+  setCurrentPage,
+  clearCurrentPage,
 } from "./storage.js";
 
 function toast(msg, warn = false) {
@@ -32,6 +34,8 @@ export function renderDashboard(username) {
   const header = renderHeader(
     username,
     (key) => {
+      // onNavigate
+      setCurrentPage(key);
       switch (key) {
         case "dashboard":
           renderDashboard(username);
@@ -45,13 +49,17 @@ export function renderDashboard(username) {
         case "landing":
           renderLandingPage(username);
           break;
+        default:
+          renderDashboard(username);
       }
     },
     () => {
+      // onLogout
       clearLoggedInUser();
+      clearCurrentPage();
       renderLogin();
     },
-    "dashboard" // active link
+    "dashboard"
   );
 
   // ----- Container -----
@@ -70,20 +78,37 @@ export function renderDashboard(username) {
     <button class="btn btn--cta" id="startNowBtn">Start Now</button>
   `;
   hero.querySelector("#startNowBtn").addEventListener("click", () => {
+    setCurrentPage("banners");
     renderBannerEditor(username);
   });
 
-  // ===== Active Campaigns (grid of three) =====
+  // ===== Active Campaigns =====
   const campaigns = document.createElement("section");
   campaigns.className = "campaigns";
-  campaigns.innerHTML = `<h2 class="campaigns__title">Active Campaigns</h2>
-  <div class="campaigns__grid" id="campaignsGrid"></div>`;
-  const gridEl = campaigns.querySelector("#campaignsGrid");
+  campaigns.innerHTML = `
+    <h2 class="campaigns__title">Active Campaigns</h2>
+    <div class="campaigns__group">
+      <h3>Banners</h3>
+      <div class="campaigns__grid" id="gridBanners"></div>
+    </div>
+    <div class="campaigns__group">
+      <h3>Marketing Emails</h3>
+      <div class="campaigns__grid" id="gridEmails"></div>
+    </div>
+    <div class="campaigns__group">
+      <h3>Landing Pages</h3>
+      <div class="campaigns__grid" id="gridLandings"></div>
+    </div>
+  `;
+
+  const gridBanners = campaigns.querySelector("#gridBanners");
+  const gridEmails = campaigns.querySelector("#gridEmails");
+  const gridLandings = campaigns.querySelector("#gridLandings");
 
   // Helper thumb renderers (scaled previews like in existing file)
   const bannerThumbHTML = (s, size) => {
     const [w, h] = size === "300x600" ? [300, 600] : [250, 250];
-    const ph = !s.bg ? 'class="placeholder-surface"' : "";
+    const fs = s.fontSize || 22;
     const title = s.title
       ? `<div style="font-weight:700">${s.title}</div>`
       : "";
@@ -91,17 +116,69 @@ export function renderDashboard(username) {
       ? `<div style="opacity:.9">${s.subtitle}</div>`
       : "";
     const body = s.body ? `<div style="opacity:.95">${s.body}</div>` : "";
-    return `
-      <div ${ph} style="
-        width:${w}px;height:${h}px;background:${s.bg || "transparent"};
-        color:${s.color || "#333"};
-        display:grid;place-items:center;text-align:center;
-        border:2px dashed #645774;border-radius:10px;padding:10px;
-        font-size:${s.fontSize || 22}px; overflow:hidden;">
-        <div style="max-width:90%;max-height:90%;overflow:hidden">${title}${subtitle}${body}</div>
-      </div>`;
-  };
 
+    // בסיס משותף למסגרת המוקטנת
+    const shell = `
+    width:${w}px;height:${h}px;
+    display:grid;place-items:center;text-align:center;
+    border:2px dashed #645774;border-radius:10px;padding:10px;
+    overflow:hidden;`;
+
+    // === תבניות ===
+    if (s.template === "t2") {
+      // Template 2 – רקע עם נקודות וכרטיס אמצעי
+      const dotColor = s.dotColor || "#4ade80"; // ירוק כברירת מחדל
+      const dotSize = Number(s.dotSize || 3); // px
+      const pattern = `
+      radial-gradient(${dotColor} ${Math.max(
+        1,
+        dotSize
+      )}px, transparent ${Math.max(2, dotSize + 1)}px)
+    `;
+      const patternSize = `${dotSize * 8}px ${dotSize * 8}px`;
+
+      return `
+      <div style="${shell}
+                  background:${s.bg || "#a61e4d"};
+                  color:${s.color || "#222"};
+                  font-size:${fs}px;
+                  background-image:${pattern};
+                  background-size:${patternSize};">
+        <div style="max-width:85%;background:#ffe4d6;border-radius:14px;padding:10px 12px;line-height:1.2">
+          ${title}${subtitle}${body}
+        </div>
+      </div>`;
+    }
+
+    if (s.template === "t3") {
+      // Template 3 – פס עליון וסטאק טקסט
+      return `
+      <div style="${shell}
+                  background:${s.bg || "#f0f0f0"};
+                  color:${s.color || "#222"};
+                  font-size:${fs}px;">
+        <div style="width:90%;height:90%;display:flex;flex-direction:column;gap:10px;justify-content:center;align-items:center">
+          <div style="width:100%;height:14px;background:${
+            s.color || "#222"
+          };border-radius:8px;opacity:.25"></div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+            ${title}${subtitle}${body}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // Template 1 (ברירת מחדל) – טקסט פשוט על רקע
+    return `
+    <div style="${shell}
+                background:${s.bg || "transparent"};
+                color:${s.color || "#333"};
+                font-size:${fs}px;">
+      <div style="max-width:90%;max-height:90%;overflow:hidden">
+        ${title}${subtitle}${body}
+      </div>
+    </div>`;
+  };
   const emailThumbHTML = (s) => {
     const base = `background:${s.bg || "transparent"}; color:${
       s.color || "#333"
@@ -161,105 +238,122 @@ export function renderDashboard(username) {
     return `<div style="transform:scale(.45); transform-origin: top left; width:1000px; border:2px dashed #645774; border-radius:12px; background:#fff; overflow:hidden; padding:8px">${inner}</div>`;
   };
 
-  // Collect up to three active items
-  const picks = [];
-  const banners = getBanners();
-  if (banners["250x250"]?.active) {
-    picks.push({ html: bannerThumbHTML(banners["250x250"], "250x250") });
-  }
-  if (banners["300x600"]?.active) {
-    picks.push({ html: bannerThumbHTML(banners["300x600"], "300x600") });
-  }
-  const M = getMarketingPage();
-  if (M?.active) {
-    picks.push({ html: emailThumbHTML(M) });
-  }
-  const L = getLandingPage();
-  if (L?.active) {
-    picks.push({ html: landingThumbHTML(L) });
-  }
-
-  // If not enough, fill with placeholders to 3 cards
-  while (picks.length < 3) {
-    picks.push({
-      html: `<div class="ph-surface placeholder-surface" style="width:260px;height:260px;"></div>`,
-    });
-  }
-
-  // Render grid
-  picks.slice(0, 3).forEach((p) => {
+  // ===== helpers to create a card with a close button =====
+  function makeCard(html, onClose) {
     const card = document.createElement("div");
     card.className = "campaign-card";
-    const wrap = document.createElement("div");
-    wrap.className = "campaign-card__thumb";
-    wrap.innerHTML = p.html;
-    card.appendChild(wrap.firstElementChild);
-    gridEl.appendChild(card);
-  });
+    card.style.position = "relative";
 
-  // (Optional) below the mockup: LIVE cards with close (keep for power users)
-  const liveGrid = document.createElement("div");
-  liveGrid.className = "dashboard-grid";
-  const addLiveCard = (label, innerHTML, onClose) => {
-    const card = document.createElement("div");
-    card.className = "dashboard-card";
-    const h3 = document.createElement("h3");
-    h3.textContent = label;
     const close = document.createElement("button");
     close.textContent = "×";
-    close.className = "dash-close";
-    close.addEventListener("click", onClose);
-    h3.prepend(close);
-    card.appendChild(h3);
+    close.className = "card-close";
+    close.setAttribute("aria-label", "Delete");
+    close.title = "Delete";
+    Object.assign(close.style, {
+      position: "absolute",
+      top: "6px",
+      right: "8px",
+      width: "22px",
+      height: "22px",
+      border: "none",
+      borderRadius: "50%",
+      background: "rgba(0,0,0,.55)",
+      color: "#fff",
+      cursor: "pointer",
+      lineHeight: "22px",
+      fontSize: "16px",
+      zIndex: "2",
+    });
+    close.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onClose();
+    });
+
     const wrap = document.createElement("div");
-    wrap.innerHTML = innerHTML;
+    wrap.className = "campaign-card__thumb";
+    wrap.innerHTML = html;
+
+    card.appendChild(close);
     card.appendChild(wrap.firstElementChild);
     return card;
-  };
+  }
 
-  if (banners["250x250"]?.active) {
-    liveGrid.appendChild(
-      addLiveCard(
-        "Banner 250x250 • LIVE",
-        bannerThumbHTML(banners["250x250"], "250x250"),
-        () => {
-          setBannerActive("250x250", false);
+  // ===== Banners (up to 3) =====
+  const banners = getBanners() || {};
+  const bannerEntries = Array.isArray(banners)
+    ? banners.map((b, i) => ({ key: i, data: b }))
+    : Object.entries(banners).map(([key, data]) => ({ key, data }));
+  let bannerCount = 0;
+  bannerEntries.forEach(({ key, data }) => {
+    if (data && data.active && bannerCount < 3) {
+      gridBanners.appendChild(
+        makeCard(bannerThumbHTML(data, data.size || key), () => {
+          // best-effort: support current API (by size string)
+          setBannerActive(key, false);
           toast("Removed from LIVE");
           renderDashboard(username);
-        }
-      )
-    );
+        })
+      );
+      bannerCount++;
+    }
+  });
+  while (bannerCount < 3) {
+    const ph = document.createElement("div");
+    ph.className = "ph-surface placeholder-surface";
+    ph.style.width = "260px";
+    ph.style.height = "260px";
+    gridBanners.appendChild(ph);
+    bannerCount++;
   }
-  if (banners["300x600"]?.active) {
-    liveGrid.appendChild(
-      addLiveCard(
-        "Banner 300x600 • LIVE",
-        bannerThumbHTML(banners["300x600"], "300x600"),
-        () => {
-          setBannerActive("300x600", false);
+
+  // ===== Marketing Emails (up to 3) =====
+  const M = getMarketingPage();
+  const marketingList = Array.isArray(M) ? M : M ? [M] : [];
+  let emailCount = 0;
+  marketingList.forEach((m) => {
+    if (m && m.active && emailCount < 3) {
+      gridEmails.appendChild(
+        makeCard(emailThumbHTML(m), () => {
+          setMarketingActive(false); // current API toggles single item
           toast("Removed from LIVE");
           renderDashboard(username);
-        }
-      )
-    );
+        })
+      );
+      emailCount++;
+    }
+  });
+  while (emailCount < 3) {
+    const ph = document.createElement("div");
+    ph.className = "ph-surface placeholder-surface";
+    ph.style.width = "260px";
+    ph.style.height = "260px";
+    gridEmails.appendChild(ph);
+    emailCount++;
   }
-  if (M?.active) {
-    liveGrid.appendChild(
-      addLiveCard("Marketing Email • LIVE", emailThumbHTML(M), () => {
-        setMarketingActive(false);
-        toast("Removed from LIVE");
-        renderDashboard(username);
-      })
-    );
-  }
-  if (L?.active) {
-    liveGrid.appendChild(
-      addLiveCard("Landing Page • LIVE", landingThumbHTML(L), () => {
-        setLandingActive(false);
-        toast("Removed from LIVE");
-        renderDashboard(username);
-      })
-    );
+
+  // ===== Landing Pages (up to 3) =====
+  const L = getLandingPage();
+  const landingList = Array.isArray(L) ? L : L ? [L] : [];
+  let landCount = 0;
+  landingList.forEach((l) => {
+    if (l && l.active && landCount < 3) {
+      gridLandings.appendChild(
+        makeCard(landingThumbHTML(l), () => {
+          setLandingActive(false); // current API toggles single item
+          toast("Removed from LIVE");
+          renderDashboard(username);
+        })
+      );
+      landCount++;
+    }
+  });
+  while (landCount < 3) {
+    const ph = document.createElement("div");
+    ph.className = "ph-surface placeholder-surface";
+    ph.style.width = "260px";
+    ph.style.height = "260px";
+    gridLandings.appendChild(ph);
+    landCount++;
   }
 
   // Mount

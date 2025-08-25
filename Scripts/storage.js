@@ -314,3 +314,18 @@ export function isLandingActive() {
     return false;
   }
 }
+
+// Current page (view state)
+const CURRENT_PAGE_KEY = "currentPage";
+
+export function setCurrentPage(pageKey) {
+  localStorage.setItem(CURRENT_PAGE_KEY, pageKey);
+}
+
+export function getCurrentPage() {
+  return localStorage.getItem(CURRENT_PAGE_KEY);
+}
+
+export function clearCurrentPage() {
+  localStorage.removeItem(CURRENT_PAGE_KEY);
+}

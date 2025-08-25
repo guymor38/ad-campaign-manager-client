@@ -11,6 +11,8 @@ import {
   getLandingPage,
   saveLandingPage,
   setLandingActive,
+  setCurrentPage,
+  clearCurrentPage,
 } from "./storage.js";
 
 function toast(msg, warn = false) {
@@ -29,25 +31,24 @@ export function renderLandingPage(username) {
 
   // Header
   const header = renderHeader(
-    username,
-    (key) => {
-      if (key === "dashboard") {
-        renderDashboard(username);
-      } else if (key === "banners") {
-        renderBannerEditor(username);
-      } else if (key === "marketing") {
-        renderMarketingPage(username);
-      } else if (key === "landing") {
-        renderLandingPage(username);
-      }
-    },
-    () => {
-      clearLoggedInUser();
-      renderLogin();
-    },
-    "landing" // <-- פה השינוי
-  );
-  
+  username,
+  (key) => {        // onNavigate
+    setCurrentPage(key);
+    switch (key) {
+      case "dashboard": renderDashboard(username); break;
+      case "banners":   renderBannerEditor(username); break;
+      case "marketing": renderMarketingPage(username); break;
+      case "landing":   renderLandingPage(username); break;
+      default:          renderDashboard(username);
+    }
+  },
+  () => {           // onLogout
+    clearLoggedInUser();
+    clearCurrentPage();
+    renderLogin();
+  },
+   "landing"
+);
   app.appendChild(header);
 
   // Layout
@@ -130,7 +131,6 @@ export function renderLandingPage(username) {
 
   container.append(controls, preview);
   app.append(header, container, renderFooter());
-
 
   // State
   const DEF = {

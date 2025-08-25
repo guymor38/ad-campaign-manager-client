@@ -12,6 +12,8 @@ import {
   resetBanner,
   resetAllBanners,
   setBannerActive,
+  setCurrentPage,
+  clearCurrentPage,
 } from "./storage.js";
 
 function toast(msg, warn = false) {
@@ -32,21 +34,32 @@ export function renderBannerEditor(username) {
   const header = renderHeader(
     username,
     (key) => {
-      if (key === "dashboard") {
-        renderDashboard(username);
-      } else if (key === "banners") {
-        renderBannerEditor(username);
-      } else if (key === "marketing") {
-        renderMarketingPage(username);
-      } else if (key === "landing") {
-        renderLandingPage(username);
+      // onNavigate
+      setCurrentPage(key);
+      switch (key) {
+        case "dashboard":
+          renderDashboard(username);
+          break;
+        case "banners":
+          renderBannerEditor(username);
+          break;
+        case "marketing":
+          renderMarketingPage(username);
+          break;
+        case "landing":
+          renderLandingPage(username);
+          break;
+        default:
+          renderDashboard(username);
       }
     },
     () => {
+      // onLogout
       clearLoggedInUser();
+      clearCurrentPage();
       renderLogin();
     },
-    "banners" // underline לעמוד הנוכחי
+    "banners"
   );
 
   // ===== Layout =====
