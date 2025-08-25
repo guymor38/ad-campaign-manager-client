@@ -4,6 +4,8 @@ import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderLandingPage } from "./landingPage.js";
 import { renderBannerEditor } from "./bannerEditor.js";
+import { renderFooter } from "./footer.js";
+
 import {
   clearLoggedInUser,
   getMarketingPage,
@@ -45,7 +47,7 @@ export function renderMarketingPage(username) {
     },
     "marketing" // <-- פה השינוי
   );
-  
+
   app.appendChild(header);
 
   // Layout
@@ -122,7 +124,8 @@ export function renderMarketingPage(username) {
   `;
 
   container.append(controls, preview);
-  app.appendChild(container);
+  app.append(header, container, renderFooter());
+
 
   // ===== State =====
   const DEF = {

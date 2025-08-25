@@ -4,6 +4,7 @@ import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
+import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
   getBanner,
@@ -27,6 +28,7 @@ export function renderBannerEditor(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // Header (שומר על האווטר וה־Logout, ניווט כלינקים)
   const header = renderHeader(
     username,
     (key) => {
@@ -44,13 +46,12 @@ export function renderBannerEditor(username) {
       clearLoggedInUser();
       renderLogin();
     },
-    "banners" // <-- active nav underline for this page
+    "banners" // underline לעמוד הנוכחי
   );
-  app.appendChild(header);
 
   // ===== Layout =====
   const container = document.createElement("div");
-  container.className = "banner-editor-container";
+  container.className = "page banner-editor-container";
 
   const controls = document.createElement("div");
   controls.className = "panel controls";
@@ -130,7 +131,9 @@ export function renderBannerEditor(username) {
   `;
 
   container.append(controls, preview);
-  app.appendChild(container);
+
+  // מוּעדכן: מוסיפים ל־app רק אחרי שה־container נבנה
+  app.append(header, container, renderFooter());
 
   // ===== Refs =====
   const els = {
@@ -175,79 +178,54 @@ export function renderBannerEditor(username) {
     const s = getBanner(size) || {};
     els.template.value = s.template || "t1";
 
-    if (s.dotColor) {
-      els.dotColor.value = s.dotColor;
-    } else {
-      els.dotColor.value = "";
-    }
-    if (s.dotSize) {
-      els.dotSize.value = s.dotSize;
-    } else {
-      els.dotSize.value = "";
-    }
+    els.dotColor.value = s.dotColor || "";
+    els.dotSize.value = s.dotSize || "";
 
-    if (s.title) els.title.value = s.title;
-    else els.title.value = "";
-    if (s.subtitle) els.subtitle.value = s.subtitle;
-    else els.subtitle.value = "";
-    if (s.body) els.body.value = s.body;
-    else els.body.value = "";
-    if (s.bg) els.bg.value = s.bg;
-    else els.bg.value = "";
-    if (s.color) els.color.value = s.color;
-    else els.color.value = "";
-    if (s.fontSize) els.fontSize.value = s.fontSize;
-    else els.fontSize.value = "";
+    els.title.value = s.title || "";
+    els.subtitle.value = s.subtitle || "";
+    els.body.value = s.body || "";
+    els.bg.value = s.bg || "";
+    els.color.value = s.color || "";
+    els.fontSize.value = s.fontSize || "";
 
     toggleDotsFields();
     render();
   }
 
   function toggleDotsFields() {
-    if (els.template.value === "t2") {
-      els.dotColorWrap.style.display = "block";
-      els.dotSizeWrap.style.display = "block";
-    } else {
-      els.dotColorWrap.style.display = "none";
-      els.dotSizeWrap.style.display = "none";
-    }
+    const show = els.template.value === "t2";
+    els.dotColorWrap.style.display = show ? "block" : "none";
+    els.dotSizeWrap.style.display = show ? "block" : "none";
   }
 
   // ===== Template rendering =====
   function renderBannerInto(el, s, size) {
     // reset classes
     el.className = "banner-content bn";
-    if (s.template === "t1") {
-      el.classList.add("bn--t1");
-    } else if (s.template === "t2") {
-      el.classList.add("bn--t2");
-    } else {
-      el.classList.add("bn--t3");
-    }
+    if (s.template === "t1") el.classList.add("bn--t1");
+    else if (s.template === "t2") el.classList.add("bn--t2");
+    else el.classList.add("bn--t3");
 
     // base size
-    let w = 250, h = 250;
-    if (size === "300x600") { w = 300; h = 600; }
+    let w = 250,
+      h = 250;
+    if (size === "300x600") {
+      w = 300;
+      h = 600;
+    }
     el.style.width = w + "px";
     el.style.height = h + "px";
 
     // colors / font
-    let txt = "#1c1a26";
-    if (s.color && s.color.trim()) { txt = s.color; }
-    el.style.color = txt;
-
-    let fpx = 22;
-    if (s.fontSize && Number(s.fontSize)) { fpx = Number(s.fontSize); }
-    el.style.fontSize = fpx + "px";
+    el.style.color = s.color && s.color.trim() ? s.color : "#1c1a26";
+    el.style.fontSize =
+      (s.fontSize && Number(s.fontSize) ? Number(s.fontSize) : 22) + "px";
 
     // background
     if (s.template === "t2") {
-      let bg = "#ffffff";
-      if (s.bg && s.bg.trim()) { bg = s.bg; }
-      let dots = "#222222";
-      if (s.dotColor && s.dotColor.trim()) { dots = s.dotColor; }
-      let r = 4;
-      if (s.dotSize && Number(s.dotSize)) { r = Number(s.dotSize); }
+      const bg = s.bg && s.bg.trim() ? s.bg : "#ffffff";
+      const dots = s.dotColor && s.dotColor.trim() ? s.dotColor : "#222222";
+      const r = s.dotSize && Number(s.dotSize) ? Number(s.dotSize) : 4;
       const step = Math.max(12, r * 6);
 
       el.style.background = bg;
@@ -255,15 +233,14 @@ export function renderBannerEditor(username) {
       el.style.backgroundSize = step + "px " + step + "px";
       el.style.backgroundPosition = "0 0";
     } else {
-      if (s.bg && s.bg.trim()) { el.style.background = s.bg; }
-      else { el.style.background = "#ffffff"; }
+      el.style.background = s.bg && s.bg.trim() ? s.bg : "#ffffff";
       el.style.backgroundImage = "none";
     }
 
     // content
-    const titleText = s.title ? s.title : "";
-    const subtitleText = s.subtitle ? s.subtitle : "";
-    const bodyText = s.body ? s.body : "";
+    const titleText = s.title || "";
+    const subtitleText = s.subtitle || "";
+    const bodyText = s.body || "";
 
     let inner = "";
     if (s.template === "t1") {
@@ -272,8 +249,7 @@ export function renderBannerEditor(username) {
           <div class="bn__title">${titleText}</div>
           <div class="bn__subtitle">${subtitleText}</div>
           <div class="bn__body">${bodyText}</div>
-        </div>
-      `;
+        </div>`;
     } else if (s.template === "t2") {
       inner = `
         <div class="bn__inner t2">
@@ -282,8 +258,7 @@ export function renderBannerEditor(username) {
             <div class="bn__subtitle">${subtitleText}</div>
             <div class="bn__body">${bodyText}</div>
           </div>
-        </div>
-      `;
+        </div>`;
     } else {
       inner = `
         <div class="bn__inner t3">
@@ -293,8 +268,7 @@ export function renderBannerEditor(username) {
             <div class="bn__subtitle">${subtitleText}</div>
             <div class="bn__body">${bodyText}</div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     el.innerHTML = inner;
@@ -304,8 +278,12 @@ export function renderBannerEditor(username) {
   function fitBanner() {
     const box = els.stage.getBoundingClientRect();
     const size = els.size.value;
-    let w = 250, h = 250;
-    if (size === "300x600") { w = 300; h = 600; }
+    let w = 250,
+      h = 250;
+    if (size === "300x600") {
+      w = 300;
+      h = 600;
+    }
 
     els.prev.style.transformOrigin = "top left";
     const pad = 16;
@@ -319,7 +297,7 @@ export function renderBannerEditor(username) {
   function render() {
     const size = els.size.value;
     let s = getBanner(size);
-    if (!s) { s = collectCurrent(); }
+    if (!s) s = collectCurrent();
     renderBannerInto(els.prev, s, size);
     fitBanner();
   }
@@ -336,13 +314,20 @@ export function renderBannerEditor(username) {
 
   // events
   const inputs = [
-    els.template, els.dotColor, els.dotSize, els.title, els.subtitle,
-    els.body, els.bg, els.color, els.fontSize,
+    els.template,
+    els.dotColor,
+    els.dotSize,
+    els.title,
+    els.subtitle,
+    els.body,
+    els.bg,
+    els.color,
+    els.fontSize,
   ];
   inputs.forEach((inp) => {
     if (!inp) return;
     inp.addEventListener("input", () => {
-      if (inp === els.template) { toggleDotsFields(); }
+      if (inp === els.template) toggleDotsFields();
       onAnyChange();
     });
   });
@@ -365,7 +350,7 @@ export function renderBannerEditor(username) {
     setBannerActive(size, true);
     toast("Published");
 
-    // ניקה טופס (כדי ליצור באנר חדש)
+    // נקה טופס
     els.title.value = "";
     els.subtitle.value = "";
     els.body.value = "";
@@ -375,7 +360,7 @@ export function renderBannerEditor(username) {
     els.dotColor.value = "";
     els.dotSize.value = "";
 
-    // עבור אוטומטית לגודל השני
+    // מעבר אוטומטי לגודל השני
     els.size.value = size === "250x250" ? "300x600" : "250x250";
     loadFor(els.size.value);
   });

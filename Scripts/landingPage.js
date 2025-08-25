@@ -4,6 +4,8 @@ import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderBannerEditor } from "./bannerEditor.js";
+import { renderFooter } from "./footer.js";
+
 import {
   clearLoggedInUser,
   getLandingPage,
@@ -127,7 +129,8 @@ export function renderLandingPage(username) {
   `;
 
   container.append(controls, preview);
-  app.appendChild(container);
+  app.append(header, container, renderFooter());
+
 
   // State
   const DEF = {
