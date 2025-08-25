@@ -29,17 +29,23 @@ export function renderLandingPage(username) {
   const header = renderHeader(
     username,
     (key) => {
-      if (key === "dashboard") renderDashboard(username);
-      else if (key === "banners") renderBannerEditor(username);
-      else if (key === "marketing") renderMarketingPage(username);
-      else if (key === "landing") renderLandingPage(username);
-      else console.warn("Unknown page:", key);
+      if (key === "dashboard") {
+        renderDashboard(username);
+      } else if (key === "banners") {
+        renderBannerEditor(username);
+      } else if (key === "marketing") {
+        renderMarketingPage(username);
+      } else if (key === "landing") {
+        renderLandingPage(username);
+      }
     },
     () => {
       clearLoggedInUser();
       renderLogin();
-    }
+    },
+    "landing" // <-- פה השינוי
   );
+  
   app.appendChild(header);
 
   // Layout

@@ -78,3 +78,80 @@
     grid-template-columns: 1fr;
   }
 }
+/* ===== Hero (top) ===== */
+.hero {
+  text-align: center;
+  margin: 60px auto 40px;
+  max-width: 900px;
+}
+.hero__title {
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  font-weight: 800;
+  color: #80b9b1;
+  letter-spacing: 1px;
+  margin: 0 0 16px;
+}
+.hero__subtitle {
+  font-size: clamp(1.05rem, 2.3vw, 1.4rem);
+  color: #ffffff;
+  opacity: 0.95;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+.btn--cta {
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: none;
+  background: #80b9b1;
+  color: #1c1a26;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px #514864;
+  transition: filter .15s ease;
+}
+.btn--cta:hover { filter: brightness(0.95); }
+
+/* ===== Active Campaigns ===== */
+.campaigns {
+  margin: 60px auto 80px;
+  max-width: 1100px;
+}
+.campaigns__title {
+  font-size: clamp(1.4rem, 2.8vw, 1.8rem);
+  color: #ffffff;
+  margin: 0 0 20px;
+  font-weight: 800;
+}
+.campaigns__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+@media (max-width: 980px) {
+  .campaigns__grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .campaigns__grid { grid-template-columns: 1fr; }
+}
+
+.campaign-card {
+  display: grid;
+  place-items: center;
+}
+.campaign-card > * {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+/* כשמגיע HTML אמיתי של thumb, דואגים שלא יחרוג */
+.campaign-card .banner-content,
+.campaign-card .lp-canvas,
+.campaign-card .email-thumb,
+.campaign-card .ph-surface {
+  display: block;
+  width: 100%;
+  height: auto;
+}

@@ -1,13 +1,18 @@
 // footer.js
+import { loadStyle } from "./utils.js";
+
 export function renderFooter() {
-  const year = new Date().getFullYear();
-  const el = document.createElement("footer");
-  el.className = "footer";
-  el.innerHTML = `
+  loadStyle("./styles/main.css");
+
+  const footer = document.createElement("footer");
+  footer.className = "footer";
+
+  footer.innerHTML = `
     <div class="footer__inner">
-      <div class="footer__brand">Bannerist</div>
-      <div class="footer__year">${year}</div>
+      <span class="footer__left">Bannerist</span>
+      <span class="footer__right">2025</span>
     </div>
   `;
-  return el;
+
+  return footer;
 }

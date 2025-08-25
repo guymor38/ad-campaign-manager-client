@@ -43,7 +43,8 @@ export function renderBannerEditor(username) {
     () => {
       clearLoggedInUser();
       renderLogin();
-    }
+    },
+    "banners" // <-- active nav underline for this page
   );
   app.appendChild(header);
 
@@ -225,42 +226,28 @@ export function renderBannerEditor(username) {
     }
 
     // base size
-    let w = 250,
-      h = 250;
-    if (size === "300x600") {
-      w = 300;
-      h = 600;
-    }
+    let w = 250, h = 250;
+    if (size === "300x600") { w = 300; h = 600; }
     el.style.width = w + "px";
     el.style.height = h + "px";
 
     // colors / font
     let txt = "#1c1a26";
-    if (s.color && s.color.trim()) {
-      txt = s.color;
-    }
+    if (s.color && s.color.trim()) { txt = s.color; }
     el.style.color = txt;
 
     let fpx = 22;
-    if (s.fontSize && Number(s.fontSize)) {
-      fpx = Number(s.fontSize);
-    }
+    if (s.fontSize && Number(s.fontSize)) { fpx = Number(s.fontSize); }
     el.style.fontSize = fpx + "px";
 
     // background
     if (s.template === "t2") {
       let bg = "#ffffff";
-      if (s.bg && s.bg.trim()) {
-        bg = s.bg;
-      }
+      if (s.bg && s.bg.trim()) { bg = s.bg; }
       let dots = "#222222";
-      if (s.dotColor && s.dotColor.trim()) {
-        dots = s.dotColor;
-      }
+      if (s.dotColor && s.dotColor.trim()) { dots = s.dotColor; }
       let r = 4;
-      if (s.dotSize && Number(s.dotSize)) {
-        r = Number(s.dotSize);
-      }
+      if (s.dotSize && Number(s.dotSize)) { r = Number(s.dotSize); }
       const step = Math.max(12, r * 6);
 
       el.style.background = bg;
@@ -268,27 +255,15 @@ export function renderBannerEditor(username) {
       el.style.backgroundSize = step + "px " + step + "px";
       el.style.backgroundPosition = "0 0";
     } else {
-      if (s.bg && s.bg.trim()) {
-        el.style.background = s.bg;
-      } else {
-        el.style.background = "#ffffff";
-      }
+      if (s.bg && s.bg.trim()) { el.style.background = s.bg; }
+      else { el.style.background = "#ffffff"; }
       el.style.backgroundImage = "none";
     }
 
     // content
-    let titleText = "";
-    if (s.title) {
-      titleText = s.title;
-    }
-    let subtitleText = "";
-    if (s.subtitle) {
-      subtitleText = s.subtitle;
-    }
-    let bodyText = "";
-    if (s.body) {
-      bodyText = s.body;
-    }
+    const titleText = s.title ? s.title : "";
+    const subtitleText = s.subtitle ? s.subtitle : "";
+    const bodyText = s.body ? s.body : "";
 
     let inner = "";
     if (s.template === "t1") {
@@ -329,36 +304,22 @@ export function renderBannerEditor(username) {
   function fitBanner() {
     const box = els.stage.getBoundingClientRect();
     const size = els.size.value;
-    let w = 250,
-      h = 250;
-    if (size === "300x600") {
-      w = 300;
-      h = 600;
-    }
+    let w = 250, h = 250;
+    if (size === "300x600") { w = 300; h = 600; }
 
     els.prev.style.transformOrigin = "top left";
     const pad = 16;
     const scaleW = (box.width - pad) / w;
     const scaleH = (box.height - pad) / h;
-    let scale = scaleW;
-    if (scaleH < scale) {
-      scale = scaleH;
-    }
-    if (scale > 1.6) {
-      scale = 1.6;
-    }
-    if (scale < 0.1) {
-      scale = 0.1;
-    }
+    let scale = Math.min(scaleW, scaleH);
+    scale = Math.max(0.1, Math.min(scale, 1.6));
     els.prev.style.transform = "scale(" + scale + ")";
   }
 
   function render() {
     const size = els.size.value;
     let s = getBanner(size);
-    if (!s) {
-      s = collectCurrent();
-    }
+    if (!s) { s = collectCurrent(); }
     renderBannerInto(els.prev, s, size);
     fitBanner();
   }
@@ -375,26 +336,16 @@ export function renderBannerEditor(username) {
 
   // events
   const inputs = [
-    els.template,
-    els.dotColor,
-    els.dotSize,
-    els.title,
-    els.subtitle,
-    els.body,
-    els.bg,
-    els.color,
-    els.fontSize,
+    els.template, els.dotColor, els.dotSize, els.title, els.subtitle,
+    els.body, els.bg, els.color, els.fontSize,
   ];
-  for (let i = 0; i < inputs.length; i++) {
-    const inp = inputs[i];
-    if (!inp) continue;
+  inputs.forEach((inp) => {
+    if (!inp) return;
     inp.addEventListener("input", () => {
-      if (inp === els.template) {
-        toggleDotsFields();
-      }
+      if (inp === els.template) { toggleDotsFields(); }
       onAnyChange();
     });
-  }
+  });
 
   els.size.addEventListener("change", () => {
     loadFor(els.size.value);
@@ -425,11 +376,7 @@ export function renderBannerEditor(username) {
     els.dotSize.value = "";
 
     // עבור אוטומטית לגודל השני
-    if (size === "250x250") {
-      els.size.value = "300x600";
-    } else {
-      els.size.value = "250x250";
-    }
+    els.size.value = size === "250x250" ? "300x600" : "250x250";
     loadFor(els.size.value);
   });
 

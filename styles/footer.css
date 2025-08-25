@@ -1,26 +1,22 @@
-/* footer.css */
 .footer {
-  /* לא sticky יותר — נותנים ל-FlexBox של #app להדביק אותו למטה */
-  position: static;
-  inset: auto;
+  margin-top: auto;
+  padding: 16px 24px;
+  background: #1c1a26; /* כהה כמו ההדר */
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
 
-  background: #231e2a;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  color: #e9f5f3;
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.footer__inner {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
+}
 
-  /* חשוב כדי שלא יתכווץ */
-  flex: 0 0 auto;
-}
 .footer__left {
-  justify-self: start;
-  opacity: 0.95;
+  text-align: left;
 }
+
 .footer__right {
-  justify-self: end;
-  opacity: 0.85;
+  text-align: right;
 }
