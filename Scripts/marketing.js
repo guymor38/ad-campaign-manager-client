@@ -5,7 +5,6 @@ import { renderLogin } from "./login.js";
 import { renderLandingPage } from "./landingPage.js";
 import { renderBannerEditor } from "./bannerEditor.js";
 import { renderFooter } from "./footer.js";
-
 import {
   clearLoggedInUser,
   getMarketingPage,
@@ -29,30 +28,36 @@ export function renderMarketingPage(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header / Nav
-const header = renderHeader(
-  username,
-  (key) => {        // onNavigate
-    setCurrentPage(key);
-    switch (key) {
-      case "dashboard": renderDashboard(username); break;
-      case "banners":   renderBannerEditor(username); break;
-      case "marketing": renderMarketingPage(username); break;
-      case "landing":   renderLandingPage(username); break;
-      default:          renderDashboard(username);
-    }
-  },
-  () => {           // onLogout
-    clearLoggedInUser();
-    clearCurrentPage();
-    renderLogin();
-  },
-  "marketing" 
-);
-
+  const header = renderHeader(
+    username,
+    (key) => {
+      setCurrentPage(key);
+      switch (key) {
+        case "dashboard":
+          renderDashboard(username);
+          break;
+        case "banners":
+          renderBannerEditor(username);
+          break;
+        case "marketing":
+          renderMarketingPage(username);
+          break;
+        case "landing":
+          renderLandingPage(username);
+          break;
+        default:
+          renderDashboard(username);
+      }
+    },
+    () => {
+      clearLoggedInUser();
+      clearCurrentPage();
+      renderLogin();
+    },
+    "marketing"
+  );
   app.appendChild(header);
 
-  // Layout
   const container = document.createElement("div");
   container.className = "marketing-container";
 
@@ -60,7 +65,6 @@ const header = renderHeader(
   controls.className = "panel";
   controls.innerHTML = `
     <h2>Email Builder</h2>
-    <p style="opacity:.85;margin:6px 0 12px">רוחב פריוויו: 650px • שמירה אוטומטית</p>
 
     <div class="marketing-editor">
       <div class="field">
@@ -87,8 +91,7 @@ const header = renderHeader(
       <div class="field"><label>Button text</label>
         <input id="ctaText" placeholder="Learn more"/></div>
 
-      <div class="field"><label>Button URL</label>
-        <input id="ctaUrl" placeholder="https://example.com"/></div>
+     
 
       <div class="field"><label>Background</label>
         <input id="bg" type="color"/></div>
@@ -128,7 +131,6 @@ const header = renderHeader(
   container.append(controls, preview);
   app.append(header, container, renderFooter());
 
-  // ===== State =====
   const DEF = {
     tpl: "t1",
     title: "",
@@ -136,7 +138,6 @@ const header = renderHeader(
     body: "",
     imgUrl: "",
     ctaText: "",
-    ctaUrl: "",
     bg: "",
     color: "",
     accent: "",
@@ -151,7 +152,6 @@ const header = renderHeader(
     body: controls.querySelector("#body"),
     imgUrl: controls.querySelector("#imgUrl"),
     ctaText: controls.querySelector("#ctaText"),
-    ctaUrl: controls.querySelector("#ctaUrl"),
     bg: controls.querySelector("#bg"),
     color: controls.querySelector("#color"),
     accent: controls.querySelector("#accent"),
@@ -162,67 +162,65 @@ const header = renderHeader(
     reset: controls.querySelector("#reset"),
   };
 
-  // preload to inputs (only if value exists)
   Object.entries(state).forEach(([k, v]) => {
     if (els[k] && v) els[k].value = v;
   });
 
-  // HTML for templates
   function emailHTML(s) {
     const baseWrap = `
-      background:${s.bg || "transparent"}; color:${s.color || "#333"};
-      font-family:${s.font}; line-height:1.5; padding:18px;
-    `;
+    background:${s.bg || "transparent"}; color:${s.color || "#333"};
+    font-family:${s.font}; line-height:1.5; padding:18px;
+  `;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
       : "";
-    const btn = (text, url) => `
-      <a href="${url || "#"}" 
-         style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
-                background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
-        ${text || "Button"}
-      </a>`;
+    const btn = (text) => `
+    <a href="#"
+       style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
+              background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
+      ${text || "Button"}
+    </a>`;
 
     if (s.tpl === "t2") {
       return `
-        <div style="${baseWrap}">
-          <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
-            ${
-              img ||
-              `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
-            }
-          </div>
-          <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-          <p style="margin:0 0 16px">${s.body || ""}</p>
-          ${btn(s.ctaText, s.ctaUrl)}
+      <div style="${baseWrap}">
+        <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
+          ${
+            img ||
+            `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
+          }
         </div>
-      `;
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText)}
+      </div>
+    `;
     }
 
     if (s.tpl === "t3") {
       return `
-        <div style="${baseWrap}">
-          <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-            ${img}
-            <h2 style="margin:0 0 8px">${s.title || ""}</h2>
-            <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
-            <p style="margin:0 0 16px">${s.body || ""}</p>
-            ${btn(s.ctaText, s.ctaUrl)}
-          </div>
-        </div>
-      `;
-    }
-
-    // t1
-    return `
       <div style="${baseWrap}">
-        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
-        ${img}
-        <p style="margin:0 0 16px">${s.body || ""}</p>
-        ${btn(s.ctaText, s.ctaUrl)}
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+          ${img}
+          <h2 style="margin:0 0 8px">${s.title || ""}</h2>
+          <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+          <p style="margin:0 0 16px">${s.body || ""}</p>
+          ${btn(s.ctaText)}
+        </div>
       </div>
     `;
+    }
+
+    // t1 – Clean (default)
+    return `
+    <div style="${baseWrap}">
+      <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+      ${img}
+      <p style="margin:0 0 16px">${s.body || ""}</p>
+      ${btn(s.ctaText)}
+    </div>
+  `;
   }
 
   function render() {
@@ -239,10 +237,10 @@ const header = renderHeader(
     if (!inner) return;
     els.email.style.transformOrigin = "top left";
     const pad = 16;
-    // חישוב אחרי שה־DOM עודכן
     requestAnimationFrame(() => {
       const contentH = inner.getBoundingClientRect().height;
-      const scaleW = (stage.width - pad) / 650;
+      const baseW = els.email.getBoundingClientRect().width; // 650 default
+      const scaleW = (stage.width - pad) / baseW;
       const scaleH = (stage.height - pad) / contentH;
       let scale = Math.min(scaleW, scaleH);
       if (!isFinite(scale) || scale <= 0) scale = 1;
@@ -255,7 +253,6 @@ const header = renderHeader(
     saveMarketingPage(state);
   }
 
-  // inputs
   Object.keys(state).forEach((k) => {
     if (!els[k]) return;
     els[k].addEventListener("input", () => {
@@ -281,14 +278,12 @@ const header = renderHeader(
     saveMarketingPage(state);
     setMarketingActive(true);
     toast("Published");
-    // איפוס מקומי לשדות התוכן בלבד
     [
       "title",
       "subtitle",
       "body",
       "imgUrl",
       "ctaText",
-      "ctaUrl",
       "bg",
       "color",
       "accent",

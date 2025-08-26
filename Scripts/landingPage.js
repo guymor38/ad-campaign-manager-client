@@ -31,24 +31,35 @@ export function renderLandingPage(username) {
 
   // Header
   const header = renderHeader(
-  username,
-  (key) => {        // onNavigate
-    setCurrentPage(key);
-    switch (key) {
-      case "dashboard": renderDashboard(username); break;
-      case "banners":   renderBannerEditor(username); break;
-      case "marketing": renderMarketingPage(username); break;
-      case "landing":   renderLandingPage(username); break;
-      default:          renderDashboard(username);
-    }
-  },
-  () => {           // onLogout
-    clearLoggedInUser();
-    clearCurrentPage();
-    renderLogin();
-  },
-   "landing"
-);
+    username,
+    (key) => {
+      // onNavigate
+      setCurrentPage(key);
+      switch (key) {
+        case "dashboard":
+          renderDashboard(username);
+          break;
+        case "banners":
+          renderBannerEditor(username);
+          break;
+        case "marketing":
+          renderMarketingPage(username);
+          break;
+        case "landing":
+          renderLandingPage(username);
+          break;
+        default:
+          renderDashboard(username);
+      }
+    },
+    () => {
+      // onLogout
+      clearLoggedInUser();
+      clearCurrentPage();
+      renderLogin();
+    },
+    "landing"
+  );
   app.appendChild(header);
 
   // Layout
@@ -59,7 +70,6 @@ export function renderLandingPage(username) {
   controls.className = "section";
   controls.innerHTML = `
     <h2 style="margin-bottom:10px">Landing Page Builder</h2>
-    <p style="opacity:.85;margin:0 0 12px">תצוגה חיה ושמירה אוטומטית</p>
 
     <div class="form-grid">
       <div class="field"><label>Template</label>

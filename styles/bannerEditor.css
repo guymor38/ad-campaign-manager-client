@@ -111,12 +111,13 @@
   filter: brightness(0.98);
 }
 
-/* Preview stage */
+/* ---------- Preview stage (מרכוז אמיתי) ---------- */
 .preview-stage {
   width: 100%;
   height: clamp(440px, 62vh, 700px);
-  display: grid;
-  place-items: center;
+  /* לא מרכזים באמצעות grid כדי לא להתנגש עם מיקום אבסולוטי */
+  display: block;
+  position: relative;                /* עוגן ל-left/top של הבאנר */
   border: 2px dashed #645774;
   border-radius: 12px;
   background: #fff;
@@ -124,8 +125,12 @@
   padding: 8px;
 }
 
-/* הבאנר עצמו (JS מגדיר width/height + scale) */
-.banner-editor-container .banner-content.bn {
+/* הבאנר עצמו – JS נותן scale + left/top */
+.preview-stage .banner-content.bn {
+  position: absolute;                /* מאפשר left/top מה-JS */
+  left: 0;
+  top: 0;
+  transform-origin: top left;
   border: 2px dashed #c9c1d4;
   border-radius: 12px;
   overflow: hidden;
@@ -147,21 +152,12 @@
   overflow-wrap: anywhere;
 }
 
-.bn__title {
-  font-weight: 800;
-}
-.bn__subtitle {
-  font-weight: 700;
-  opacity: 0.9;
-}
-.bn__body {
-  opacity: 0.95;
-}
+.bn__title { font-weight: 800; }
+.bn__subtitle { font-weight: 700; opacity: 0.9; }
+.bn__body { opacity: 0.95; }
 
 /* T1 */
-.bn--t1 .bn__inner.t1 {
-  padding: 10px;
-}
+.bn--t1 .bn__inner.t1 { padding: 10px; }
 .bn--t1 .bn__subtitle {
   border-top: 2px solid rgba(0, 0, 0, 0.1);
   padding-top: 6px;
@@ -190,11 +186,13 @@
   padding: 8px;
   gap: 10px;
 }
+/* הקו – חלק מהעיצוב; מעודן וצבוע כצבע הטקסט */
 .bn--t3 .bn__bar {
   width: 88%;
   height: 10px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.2);
+  background: currentColor;  /* משתלב עם צבע הטקסט */
+  opacity: .18;              /* עדין יותר מהאפור שהיה */
 }
 .bn--t3 .bn__stack {
   width: 90%;

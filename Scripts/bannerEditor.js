@@ -10,7 +10,6 @@ import {
   getBanner,
   saveBanner,
   resetBanner,
-  resetAllBanners,
   setBannerActive,
   setCurrentPage,
   clearCurrentPage,
@@ -30,11 +29,9 @@ export function renderBannerEditor(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header (שומר על האווטר וה־Logout, ניווט כלינקים)
   const header = renderHeader(
     username,
     (key) => {
-      // onNavigate
       setCurrentPage(key);
       switch (key) {
         case "dashboard":
@@ -54,7 +51,6 @@ export function renderBannerEditor(username) {
       }
     },
     () => {
-      // onLogout
       clearLoggedInUser();
       clearCurrentPage();
       renderLogin();
@@ -62,7 +58,6 @@ export function renderBannerEditor(username) {
     "banners"
   );
 
-  // ===== Layout =====
   const container = document.createElement("div");
   container.className = "page banner-editor-container";
 
@@ -88,7 +83,6 @@ export function renderBannerEditor(username) {
       </select>
     </div>
 
-    <!-- יופיע רק ב-t2 -->
     <div class="field" id="f-dotColor" style="display:none">
       <label>Dots Color (t2)</label>
       <input id="dotColor" type="color" />
@@ -124,8 +118,32 @@ export function renderBannerEditor(username) {
     </div>
 
     <div class="field">
-      <label>Font Size (px)</label>
-      <input id="fontSize" type="number" min="12" max="64" placeholder="22" />
+      <label>Font Family</label>
+      <select id="fontFamily">
+        <option value="">System / Default</option>
+        <option value="Arial, Helvetica, sans-serif">Arial</option>
+        <option value="'Rubik', system-ui, sans-serif">Rubik</option>
+        <option value="'Assistant', system-ui, sans-serif">Assistant (Hebrew)</option>
+        <option value="'Noto Sans Hebrew', system-ui, sans-serif">Noto Sans Hebrew</option>
+        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Courier New', monospace">Courier New</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Headline Size (px)</label>
+      <input id="titleSize" type="number" min="12" max="96" placeholder="32" />
+    </div>
+
+    <div class="field">
+      <label>Subtitle Size (px)</label>
+      <input id="subtitleSize" type="number" min="10" max="72" placeholder="20" />
+    </div>
+
+    <div class="field">
+      <label>Body Size (px)</label>
+      <input id="bodySize" type="number" min="10" max="64" placeholder="16" />
     </div>
 
     <div class="actions">
@@ -144,8 +162,6 @@ export function renderBannerEditor(username) {
   `;
 
   container.append(controls, preview);
-
-  // מוּעדכן: מוסיפים ל־app רק אחרי שה־container נבנה
   app.append(header, container, renderFooter());
 
   // ===== Refs =====
@@ -161,14 +177,25 @@ export function renderBannerEditor(username) {
     body: controls.querySelector("#body"),
     bg: controls.querySelector("#bg"),
     color: controls.querySelector("#color"),
-    fontSize: controls.querySelector("#fontSize"),
+    // ייתכן שאין יותר input כזה – נשמור רפרנס אם קיים לתאימות לאחור
+    fontSize: controls.querySelector("#fontSize") || null,
     goLive: controls.querySelector("#go-live"),
     reset: controls.querySelector("#reset"),
     stage: preview.querySelector("#banner-stage"),
     prev: preview.querySelector("#prev"),
+    fontFamily: controls.querySelector("#fontFamily"),
+    titleSize: controls.querySelector("#titleSize"),
+    subtitleSize: controls.querySelector("#subtitleSize"),
+    bodySize: controls.querySelector("#bodySize"),
   };
 
-  // ===== State helpers =====
+  // ===== Helpers =====
+  function toggleDotsFields() {
+    const show = els.template.value === "t2";
+    els.dotColorWrap.style.display = show ? "block" : "none";
+    els.dotSizeWrap.style.display = show ? "block" : "none";
+  }
+
   function collectCurrent() {
     const obj = {
       template: els.template.value,
@@ -177,7 +204,12 @@ export function renderBannerEditor(username) {
       body: els.body.value.trim(),
       bg: els.bg.value || "",
       color: els.color.value || "",
-      fontSize: Number(els.fontSize.value) || 22,
+      fontFamily: els.fontFamily.value || "",
+      titleSize: Number(els.titleSize.value) || undefined,
+      subtitleSize: Number(els.subtitleSize.value) || undefined,
+      bodySize: Number(els.bodySize.value) || undefined,
+      // תאימות לאחור
+      fontSize: Number(els.fontSize?.value) || undefined,
       updatedAt: Date.now(),
     };
     if (els.template.value === "t2") {
@@ -185,30 +217,6 @@ export function renderBannerEditor(username) {
       if (els.dotSize.value) obj.dotSize = Number(els.dotSize.value);
     }
     return obj;
-  }
-
-  function loadFor(size) {
-    const s = getBanner(size) || {};
-    els.template.value = s.template || "t1";
-
-    els.dotColor.value = s.dotColor || "";
-    els.dotSize.value = s.dotSize || "";
-
-    els.title.value = s.title || "";
-    els.subtitle.value = s.subtitle || "";
-    els.body.value = s.body || "";
-    els.bg.value = s.bg || "";
-    els.color.value = s.color || "";
-    els.fontSize.value = s.fontSize || "";
-
-    toggleDotsFields();
-    render();
-  }
-
-  function toggleDotsFields() {
-    const show = els.template.value === "t2";
-    els.dotColorWrap.style.display = show ? "block" : "none";
-    els.dotSizeWrap.style.display = show ? "block" : "none";
   }
 
   // ===== Template rendering =====
@@ -229,18 +237,16 @@ export function renderBannerEditor(username) {
     el.style.width = w + "px";
     el.style.height = h + "px";
 
-    // colors / font
+    // colors / background
     el.style.color = s.color && s.color.trim() ? s.color : "#1c1a26";
-    el.style.fontSize =
-      (s.fontSize && Number(s.fontSize) ? Number(s.fontSize) : 22) + "px";
+    el.style.fontFamily =
+      s.fontFamily && s.fontFamily.trim() ? s.fontFamily : "";
 
-    // background
     if (s.template === "t2") {
       const bg = s.bg && s.bg.trim() ? s.bg : "#ffffff";
       const dots = s.dotColor && s.dotColor.trim() ? s.dotColor : "#222222";
       const r = s.dotSize && Number(s.dotSize) ? Number(s.dotSize) : 4;
       const step = Math.max(12, r * 6);
-
       el.style.background = bg;
       el.style.backgroundImage = `repeating-radial-gradient(${dots} 0 ${r}px, transparent ${r}px ${step}px)`;
       el.style.backgroundSize = step + "px " + step + "px";
@@ -250,7 +256,7 @@ export function renderBannerEditor(username) {
       el.style.backgroundImage = "none";
     }
 
-    // content
+    // content (בניית ה-DOM לפני שמחילים גדלים)
     const titleText = s.title || "";
     const subtitleText = s.subtitle || "";
     const bodyText = s.body || "";
@@ -283,14 +289,32 @@ export function renderBannerEditor(username) {
           </div>
         </div>`;
     }
-
     el.innerHTML = inner;
+
+    // apply per-section sizes AFTER DOM exists
+    const tEl = el.querySelector(".bn__title");
+    const sEl = el.querySelector(".bn__subtitle");
+    const bEl = el.querySelector(".bn__body");
+
+    const fallback = s.fontSize && Number(s.fontSize) ? Number(s.fontSize) : 22;
+
+    if (tEl)
+      tEl.style.fontSize =
+        ((s.titleSize && Number(s.titleSize)) || Math.max(28, fallback)) + "px";
+    if (sEl)
+      sEl.style.fontSize =
+        ((s.subtitleSize && Number(s.subtitleSize)) ||
+          Math.max(18, Math.floor(fallback * 0.9))) + "px";
+    if (bEl)
+      bEl.style.fontSize =
+        ((s.bodySize && Number(s.bodySize)) ||
+          Math.max(14, Math.floor(fallback * 0.75))) + "px";
   }
 
-  // === scale to fit stage ===
   function fitBanner() {
-    const box = els.stage.getBoundingClientRect();
+    const box = els.stage.getBoundingClientRect(); 
     const size = els.size.value;
+
     let w = 250,
       h = 250;
     if (size === "300x600") {
@@ -298,13 +322,22 @@ export function renderBannerEditor(username) {
       h = 600;
     }
 
-    els.prev.style.transformOrigin = "top left";
     const pad = 16;
-    const scaleW = (box.width - pad) / w;
-    const scaleH = (box.height - pad) / h;
-    let scale = Math.min(scaleW, scaleH);
+    const availW = box.width - pad;
+    const availH = box.height - pad;
+    let scale = Math.min(availW / w, availH / h);
     scale = Math.max(0.1, Math.min(scale, 1.6));
-    els.prev.style.transform = "scale(" + scale + ")";
+
+    els.prev.style.transformOrigin = "top left";
+    els.prev.style.transform = `scale(${scale})`;
+
+    const renderW = w * scale;
+    const renderH = h * scale;
+    const left = (box.width - renderW) / 2;
+    const top = (box.height - renderH) / 2;
+
+    els.prev.style.left = `${left}px`;
+    els.prev.style.top = `${top}px`;
   }
 
   function render() {
@@ -325,7 +358,7 @@ export function renderBannerEditor(username) {
     render();
   }
 
-  // events
+  // ===== events =====
   const inputs = [
     els.template,
     els.dotColor,
@@ -335,7 +368,10 @@ export function renderBannerEditor(username) {
     els.body,
     els.bg,
     els.color,
-    els.fontSize,
+    els.fontFamily,
+    els.titleSize,
+    els.subtitleSize,
+    els.bodySize,
   ];
   inputs.forEach((inp) => {
     if (!inp) return;
@@ -344,6 +380,34 @@ export function renderBannerEditor(username) {
       onAnyChange();
     });
   });
+
+  // -------- loadFor (הייתה חסרה) --------
+  function loadFor(size) {
+    const s = getBanner(size) || {};
+    els.template.value = s.template || "t1";
+    els.dotColor.value = s.dotColor || "";
+    els.dotSize.value = s.dotSize || "";
+
+    els.title.value = s.title || "";
+    els.subtitle.value = s.subtitle || "";
+    els.body.value = s.body || "";
+    els.bg.value = s.bg || "";
+    els.color.value = s.color || "";
+
+    els.fontFamily.value = s.fontFamily || "";
+    els.titleSize.value = s.titleSize ?? "";
+    els.subtitleSize.value = s.subtitleSize ?? "";
+    els.bodySize.value = s.bodySize ?? "";
+
+    // תאימות לאחור
+    if (!els.titleSize.value && s.fontSize) els.titleSize.value = s.fontSize;
+    if (!els.subtitleSize.value && s.fontSize)
+      els.subtitleSize.value = s.fontSize;
+    if (!els.bodySize.value && s.fontSize) els.bodySize.value = s.fontSize;
+
+    toggleDotsFields();
+    render();
+  }
 
   els.size.addEventListener("change", () => {
     loadFor(els.size.value);
@@ -363,15 +427,19 @@ export function renderBannerEditor(username) {
     setBannerActive(size, true);
     toast("Published");
 
-    // נקה טופס
+    // נקה טופס (בדיקת null לשדה הישן)
     els.title.value = "";
     els.subtitle.value = "";
     els.body.value = "";
     els.bg.value = "";
     els.color.value = "";
-    els.fontSize.value = "";
+    if (els.fontSize) els.fontSize.value = "";
     els.dotColor.value = "";
     els.dotSize.value = "";
+    els.fontFamily.value = "";
+    els.titleSize.value = "";
+    els.subtitleSize.value = "";
+    els.bodySize.value = "";
 
     // מעבר אוטומטי לגודל השני
     els.size.value = size === "250x250" ? "300x600" : "250x250";
