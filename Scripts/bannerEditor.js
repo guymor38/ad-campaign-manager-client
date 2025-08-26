@@ -397,10 +397,10 @@ export function renderBannerEditor(username) {
 
   els.goLive.addEventListener("click", () => {
     const size = els.size.value;
-    const payload = { ...collectCurrent(), size, active: true };
-    const key = `bn-${Date.now()}`; // unique key so we can have more than 2 at once
-    saveBanner(key, payload);
-    setBannerActive(key, true);
+    const payload = collectCurrent();
+    payload.active = true;
+    saveBanner(size, payload);
+    setBannerActive(size, true);
     toast("Published");
 
     els.title.value = els.subtitle.value = els.body.value = "";

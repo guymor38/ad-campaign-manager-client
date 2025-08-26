@@ -133,7 +133,7 @@
   border-radius: 12px;
   background: #fff;
   display: grid;
-  place-items: start;           /* ← היה center; נותנים ל-JS למרכז */
+  place-items: center;
   overflow: hidden;
   padding: 8px;
 }
@@ -141,9 +141,6 @@
   border: 2px dashed #c9c1d4;
   border-radius: 12px;
   overflow: hidden;
-  /* הכנות למרכוז דינמי */
-  position: relative;
-  transform-origin: top left;
 }
 
 /* Placeholder */

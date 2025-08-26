@@ -25,7 +25,6 @@ function toast(msg, warn = false) {
 
 export function renderLandingPage(username) {
   loadStyle("./styles/main.css");
-  loadStyle("./styles/landingPage.css");
 
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -134,9 +133,7 @@ export function renderLandingPage(username) {
   preview.innerHTML = `
     <h3 style="margin-bottom:10px">Live Preview</h3>
     <div class="lp-stage" id="lp-stage">
-      <div id="lp-wrap">
-        <div class="lp-canvas placeholder-surface" id="lp" style="width:1000px"></div>
-      </div>
+      <div class="lp-canvas placeholder-surface" id="lp" style="width:1000px"></div>
     </div>
   `;
 
@@ -176,7 +173,6 @@ export function renderLandingPage(username) {
     leadTitle: form.querySelector("#leadTitle"),
     leadBtn: form.querySelector("#leadBtn"),
     stage: preview.querySelector("#lp-stage"),
-    wrap: preview.querySelector("#lp-wrap"),
     lp: preview.querySelector("#lp"),
     goLive: form.querySelector("#go-live"),
     reset: form.querySelector("#reset"),
@@ -189,18 +185,28 @@ export function renderLandingPage(username) {
 
   // HTML for templates
   const btn = (text, url, accent) =>
-    `<a href="${url || "#"}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${accent || "#2d89ef"};color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
+    `<a href="${
+      url || "#"
+    }" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
+      accent || "#2d89ef"
+    };color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
 
   const leadForm = (title, btnText, accent) => `
     <form onsubmit="return false" style="margin-top:16px; display:grid; gap:10px">
       <h3 style="margin:0 0 6px">${title || ""}</h3>
       <input placeholder="Full name" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
       <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
-      <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${accent || "#2d89ef"};color:#fff;font-weight:700;cursor:pointer">${btnText || "Submit"}</button>
+      <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${
+        accent || "#2d89ef"
+      };color:#fff;font-weight:700;cursor:pointer">${
+    btnText || "Submit"
+  }</button>
     </form>`;
 
   function lpHTML(s) {
-    const shell = `background:${s.bg || "transparent"}; color:${s.color || "#333"}; font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;`;
+    const shell = `background:${s.bg || "transparent"}; color:${
+      s.color || "#333"
+    }; font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;`;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 14px;border-radius:12px"/>`
       : "";
@@ -208,7 +214,10 @@ export function renderLandingPage(username) {
     if (s.tpl === "t2") {
       return `<div style="${shell}">
         <div style="padding:0 0 14px;text-align:center;background:rgba(0,0,0,.03);border-radius:8px;">
-          ${img || `<div style="height:220px;display:grid;place-items:center;color:#888">Hero</div>`}
+          ${
+            img ||
+            `<div style="height:220px;display:grid;place-items:center;color:#888">Hero</div>`
+          }
         </div>
         <h1 style="margin:0 0 10px">${s.title || ""}</h1>
         <p style="margin:0 0 16px">${s.body || ""}</p>
@@ -227,7 +236,10 @@ export function renderLandingPage(username) {
             ${btn(s.ctaText, s.ctaUrl, s.accent)}
             ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
           </div>
-          <div>${img || `<div style="height:300px;border-radius:12px;background:rgba(0,0,0,.06)"></div>`}</div>
+          <div>${
+            img ||
+            `<div style="height:300px;border-radius:12px;background:rgba(0,0,0,.06)"></div>`
+          }</div>
         </div>
       </div>`;
     }
@@ -251,33 +263,24 @@ export function renderLandingPage(username) {
     fitLP();
   }
 
-  // מרכוז אמיתי בתוך הריבוע הלבן
   function fitLP() {
-    const stageBox = els.stage.getBoundingClientRect();
+    const stage = els.stage.getBoundingClientRect();
     const inner = els.lp.firstElementChild;
     if (!inner) return;
-  
-    const pad = 16;
-    const baseW = 1000;                          // רוחב הקנבס המקורי (כמו אצלך)
-    const contentH = inner.getBoundingClientRect().height;
-  
-    const availW = stageBox.width - pad;
-    const availH = stageBox.height - pad;
-  
-    // אותו רעיון כמו בבאנרים: scale לפי הרוחב/גובה הפנויים
-    let scale = Math.min(availW / baseW, availH / contentH);
-    scale = Math.max(0.1, Math.min(scale, 1));   // תחום סביר
-  
-    const scaledW = baseW * scale;
-    const scaledH = contentH * scale;
-  
-    const left = (stageBox.width  - scaledW) / 2;
-    const top  = (stageBox.height - scaledH) / 2;
-  
     els.lp.style.transformOrigin = "top left";
-    els.lp.style.transform = `translate(${left}px, ${top}px) scale(${scale})`;
+    const pad = 16;
+    requestAnimationFrame(() => {
+      const contentH = inner.getBoundingClientRect().height;
+      const baseW = 1000;
+      let scale = Math.min(
+        (stage.width - pad) / baseW,
+        (stage.height - pad) / contentH
+      );
+      if (!isFinite(scale) || scale <= 0) scale = 1;
+      if (scale > 1.0) scale = 1.0;
+      els.lp.style.transform = `scale(${scale})`;
+    });
   }
-  
 
   function persist() {
     saveLandingDraft(state);
