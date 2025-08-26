@@ -1,3 +1,5 @@
+// marketing.js  — full, fixed
+
 import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderDashboard } from "./dashboard.js";
@@ -8,9 +10,9 @@ import { renderFooter } from "./footer.js";
 
 import {
   clearLoggedInUser,
-  getMarketingDraft,
-  saveMarketingDraft,
-  addMarketingCampaign,
+  getMarketingPage, // יכול להיות אובייקט אחד או מערך
+  saveMarketingPage, // נשמר לאובייקט יחיד (לא מערך)
+  addMarketingCampaign, // מוסיף לרשימה (מערך)
   setCurrentPage,
   clearCurrentPage,
 } from "./storage.js";
@@ -23,13 +25,31 @@ function toast(msg, warn = false) {
   setTimeout(() => t.remove(), 1600);
 }
 
+/* ---------- local draft helpers (avoid overwriting the published list) ---------- */
+const DRAFT_KEY = "marketingDraft";
+const loadDraft = () => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+const saveDraft = (s) => {
+  localStorage.setItem(
+    DRAFT_KEY,
+    JSON.stringify({ ...s, updatedAt: Date.now() })
+  );
+};
+const clearDraft = () => localStorage.removeItem(DRAFT_KEY);
+/* ------------------------------------------------------------------------------ */
+
 export function renderMarketingPage(username) {
   loadStyle("./styles/main.css");
 
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header / Nav
   const header = renderHeader(
     username,
     (key) => {
@@ -60,7 +80,6 @@ export function renderMarketingPage(username) {
   );
   app.appendChild(header);
 
-  // Layout
   const container = document.createElement("div");
   container.className = "marketing-container";
 
@@ -93,6 +112,9 @@ export function renderMarketingPage(username) {
 
       <div class="field"><label>Button text</label>
         <input id="ctaText" placeholder="Learn more"/></div>
+
+      <div class="field"><label>Button URL</label>
+        <input id="ctaUrl" placeholder="https://example.com"/></div>
 
       <div class="field"><label>Background</label>
         <input id="bg" type="color"/></div>
@@ -132,7 +154,7 @@ export function renderMarketingPage(username) {
   container.append(controls, preview);
   app.append(header, container, renderFooter());
 
-  // ===== State (draft) =====
+  // ===== default / state =====
   const DEF = {
     tpl: "t1",
     title: "",
@@ -140,12 +162,19 @@ export function renderMarketingPage(username) {
     body: "",
     imgUrl: "",
     ctaText: "",
+    ctaUrl: "",
     bg: "",
     color: "",
     accent: "",
     font: "system-ui, -apple-system, Segoe UI, Roboto",
   };
-  const state = Object.assign({}, DEF, getMarketingDraft() || {});
+
+  // עדיפות לטיוטה; אם אין – ואם יש אובייקט יחיד ב־storage נשתמש בו
+  const stored = getMarketingPage();
+  const initial =
+    loadDraft() || (stored && !Array.isArray(stored) ? stored : null) || DEF;
+
+  const state = { ...DEF, ...initial };
 
   const els = {
     tpl: controls.querySelector("#tpl"),
@@ -154,6 +183,7 @@ export function renderMarketingPage(username) {
     body: controls.querySelector("#body"),
     imgUrl: controls.querySelector("#imgUrl"),
     ctaText: controls.querySelector("#ctaText"),
+    ctaUrl: controls.querySelector("#ctaUrl"),
     bg: controls.querySelector("#bg"),
     color: controls.querySelector("#color"),
     accent: controls.querySelector("#accent"),
@@ -164,12 +194,12 @@ export function renderMarketingPage(username) {
     reset: controls.querySelector("#reset"),
   };
 
-  // preload to inputs
+  // preload inputs
   Object.entries(state).forEach(([k, v]) => {
     if (els[k] && v) els[k].value = v;
   });
 
-  // HTML for templates
+  // HTML factory
   function emailHTML(s) {
     const baseWrap = `
       background:${s.bg || "transparent"}; color:${s.color || "#333"};
@@ -178,8 +208,8 @@ export function renderMarketingPage(username) {
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
       : "";
-    const btn = (text) => `
-      <a href="#"
+    const btn = (text, url) => `
+      <a href="${url || "#"}"
          style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
                 background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
         ${text || "Button"}
@@ -196,7 +226,7 @@ export function renderMarketingPage(username) {
           </div>
           <h1 style="margin:0 0 8px">${s.title || ""}</h1>
           <p style="margin:0 0 16px">${s.body || ""}</p>
-          ${btn(s.ctaText)}
+          ${btn(s.ctaText, s.ctaUrl)}
         </div>
       `;
     }
@@ -209,7 +239,7 @@ export function renderMarketingPage(username) {
             <h2 style="margin:0 0 8px">${s.title || ""}</h2>
             <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
             <p style="margin:0 0 16px">${s.body || ""}</p>
-            ${btn(s.ctaText)}
+            ${btn(s.ctaText, s.ctaUrl)}
           </div>
         </div>
       `;
@@ -222,17 +252,9 @@ export function renderMarketingPage(username) {
         <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
         ${img}
         <p style="margin:0 0 16px">${s.body || ""}</p>
-        ${btn(s.ctaText)}
+        ${btn(s.ctaText, s.ctaUrl)}
       </div>
     `;
-  }
-
-  function render() {
-    const s = state;
-    if (s.bg) els.email.classList.remove("placeholder-surface");
-    else els.email.classList.add("placeholder-surface");
-    els.email.innerHTML = emailHTML(s);
-    fitEmail();
   }
 
   function fitEmail() {
@@ -253,11 +275,26 @@ export function renderMarketingPage(username) {
     });
   }
 
-  function persist() {
-    saveMarketingDraft(state);
+  function render() {
+    const s = state;
+    if (s.bg) els.email.classList.remove("placeholder-surface");
+    else els.email.classList.add("placeholder-surface");
+    els.email.innerHTML = emailHTML(s);
+    fitEmail();
   }
 
-  // inputs
+  function persist() {
+    // שומרים טיוטה מקומית כדי לא לדרוס מערך קמפיינים שמפורסם
+    saveDraft(state);
+
+    // אופציונלי: לשמור גם כאובייקט יחיד לשימוש מחוץ לדף
+    // (אם אין כרגע מערך קמפיינים, זה לא יפריע)
+    const current = getMarketingPage();
+    if (!Array.isArray(current)) {
+      saveMarketingPage(state);
+    }
+  }
+
   Object.keys(state).forEach((k) => {
     if (!els[k]) return;
     els[k].addEventListener("input", () => {
@@ -280,7 +317,14 @@ export function renderMarketingPage(username) {
 
   els.goLive.addEventListener("click", () => {
     addMarketingCampaign({ ...state, active: true });
+    clearDraft();
     toast("Published");
+    // אפס את השדות לתחילת עבודה חדשה
+    Object.assign(state, { ...DEF, font: state.font || DEF.font });
+    Object.keys(state).forEach((k) => {
+      if (els[k]) els[k].value = state[k] || "";
+    });
+    render();
   });
 
   window.addEventListener("resize", fitEmail);
