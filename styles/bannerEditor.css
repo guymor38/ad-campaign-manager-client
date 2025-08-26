@@ -1,4 +1,4 @@
-/* Banner Editor – שני טורים: טופס | פריוויו */
+/* Layout */
 .banner-editor-container {
   max-width: 1200px;
   margin: 24px auto;
@@ -111,13 +111,11 @@
   filter: brightness(0.98);
 }
 
-/* ---------- Preview stage (מרכוז אמיתי) ---------- */
+/* Preview stage */
 .preview-stage {
   width: 100%;
   height: clamp(440px, 62vh, 700px);
-  /* לא מרכזים באמצעות grid כדי לא להתנגש עם מיקום אבסולוטי */
-  display: block;
-  position: relative;                /* עוגן ל-left/top של הבאנר */
+  position: relative;
   border: 2px dashed #645774;
   border-radius: 12px;
   background: #fff;
@@ -125,9 +123,9 @@
   padding: 8px;
 }
 
-/* הבאנר עצמו – JS נותן scale + left/top */
-.preview-stage .banner-content.bn {
-  position: absolute;                /* מאפשר left/top מה-JS */
+/* Banner content */
+.banner-editor-container .banner-content.bn {
+  position: absolute;
   left: 0;
   top: 0;
   transform-origin: top left;
@@ -139,64 +137,103 @@
   place-items: center;
 }
 
-/* תוכן פנימי של הבאנר */
+/* Inner content */
 .bn__inner {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   width: 90%;
   max-width: 90%;
   margin: 0 auto;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.25;
   word-break: break-word;
   overflow-wrap: anywhere;
 }
-
-.bn__title { font-weight: 800; }
-.bn__subtitle { font-weight: 700; opacity: 0.9; }
-.bn__body { opacity: 0.95; }
-
-/* T1 */
-.bn--t1 .bn__inner.t1 { padding: 10px; }
-.bn--t1 .bn__subtitle {
-  border-top: 2px solid rgba(0, 0, 0, 0.1);
-  padding-top: 6px;
+.bn__title {
+  font-weight: 800;
+}
+.bn__subtitle {
+  font-weight: 700;
+  opacity: 0.9;
+}
+.bn__body {
+  opacity: 0.95;
 }
 
-/* T2 – כרטיס לבן על רקע נקודות */
+/* Template 1 â€“ Classic Card */
+.bn--t1 .bn__inner.t1 {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+.bn--t1 .bn__title {
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 6px;
+}
+.bn--t1 .bn__subtitle {
+  opacity: 0.85;
+}
+.bn--t1 .bn__body {
+  opacity: 0.9;
+}
+
+/* Template 2 â€“ Dots Card */
 .bn--t2 .bn__inner.t2 {
-  padding: 10px;
+  padding: 16px;
   display: grid;
   place-items: center;
 }
 .bn--t2 .bn__card {
-  background: rgba(255, 255, 255, 0.9);
+  background: #fff;
   color: inherit;
   border-radius: 12px;
-  padding: 10px;
+  padding: 14px;
   width: 92%;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: grid;
+  gap: 8px;
+  text-align: center;
 }
 
-/* T3 – פס עליון + טקסט */
+/* Template 3 â€“ Real Estate, stronger identity */
 .bn--t3 .bn__inner.t3 {
-  grid-template-rows: auto 1fr;
-  align-items: start;
+  padding: 16px 14px;
+  display: grid;
+  gap: 12px;
   justify-items: center;
-  padding: 8px;
-  gap: 10px;
 }
-/* הקו – חלק מהעיצוב; מעודן וצבוע כצבע הטקסט */
+
+/* 2) Bold, colored header bar */
 .bn--t3 .bn__bar {
-  width: 88%;
-  height: 10px;
-  border-radius: 999px;
-  background: currentColor;  /* משתלב עם צבע הטקסט */
-  opacity: .18;              /* עדין יותר מהאפור שהיה */
+  width: 100%;
+  height: 22px; /* bolder */
+  border-radius: 6px;
+  background: var(--accent, currentColor); /* allow accent override */
+  opacity: 1; /* solid */
 }
+
+/* 3) Text blocks as soft cards */
 .bn--t3 .bn__stack {
-  width: 90%;
-  margin: 0 auto;
+  display: grid;
+  gap: 8px;
+  width: 92%;
+  text-align: left; /* differentiate from t1 */
+  justify-items: stretch;
+}
+.bn--t3 .bn__title,
+.bn--t3 .bn__subtitle,
+.bn--t3 .bn__body {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.bn--t3 .bn__subtitle {
+  opacity: 0.95;
+}
+.bn--t3 .bn__body {
+  opacity: 0.95;
 }
 
 /* Responsive */
