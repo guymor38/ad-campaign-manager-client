@@ -25,7 +25,7 @@ function toast(msg, warn = false) {
 
 export function renderLandingPage(username) {
   loadStyle("./styles/main.css");
-  loadStyle("./styles/landingPage.css"); // חשוב: טוענים גם את ה-CSS הייעודי
+  loadStyle("./styles/landingPage.css");
 
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -134,7 +134,9 @@ export function renderLandingPage(username) {
   preview.innerHTML = `
     <h3 style="margin-bottom:10px">Live Preview</h3>
     <div class="lp-stage" id="lp-stage">
-      <div class="lp-canvas placeholder-surface" id="lp" style="width:1000px"></div>
+      <div id="lp-wrap">
+        <div class="lp-canvas placeholder-surface" id="lp" style="width:1000px"></div>
+      </div>
     </div>
   `;
 
@@ -174,6 +176,7 @@ export function renderLandingPage(username) {
     leadTitle: form.querySelector("#leadTitle"),
     leadBtn: form.querySelector("#leadBtn"),
     stage: preview.querySelector("#lp-stage"),
+    wrap: preview.querySelector("#lp-wrap"),
     lp: preview.querySelector("#lp"),
     goLive: form.querySelector("#go-live"),
     reset: form.querySelector("#reset"),
@@ -248,7 +251,7 @@ export function renderLandingPage(username) {
     fitLP();
   }
 
-  // ==== מרכוז ו-scale מדויקים ====
+  // מרכוז אמיתי בתוך הריבוע הלבן
   function fitLP() {
     const stage = els.stage.getBoundingClientRect();
     const inner = els.lp.firstElementChild;
@@ -260,7 +263,7 @@ export function renderLandingPage(username) {
     // גובה התוכן בפועל (לפני scale)
     const contentH = inner.getBoundingClientRect().height;
 
-    // חישוב scale כך שייכנס גם לרוחב וגם לגובה
+    // חישוב scale כך שייכנס לרוחב/גובה
     let scale = Math.min(
       (stage.width - pad) / baseW,
       (stage.height - pad) / contentH
@@ -268,18 +271,13 @@ export function renderLandingPage(username) {
     if (!isFinite(scale) || scale <= 0) scale = 1;
     if (scale > 1) scale = 1;
 
-    // חישוב גובה לאחר scale והיסט אנכי כדי למרכז גם לגובה
-    const scaledH = contentH * scale;
-    const offsetY = Math.max(0, (stage.height - scaledH) / 2);
+    // מגדירים ל-wrap את הגודל הסופי (אחרי scale) – כדי שה-grid ימקד במדויק
+    els.wrap.style.width = baseW * scale + "px";
+    els.wrap.style.height = contentH * scale + "px";
 
-    // מרכוז אופקי אמיתי: left:50% + translateX(-50%)
-    els.lp.style.position = "relative";
-    els.lp.style.left = "50%";
-    els.lp.style.top = offsetY + "px";
-    els.lp.style.justifySelf = "start"; // לא מסתמכים על center של ה-grid
-    els.lp.style.alignSelf = "start";
+    // ה-canvas נשאר בגודל המקורי ומוקטן פנימה
     els.lp.style.transformOrigin = "top left";
-    els.lp.style.transform = `translateX(-50%) scale(${scale})`;
+    els.lp.style.transform = `scale(${scale})`;
   }
 
   function persist() {
