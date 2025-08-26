@@ -5,11 +5,12 @@ import { renderLogin } from "./login.js";
 import { renderLandingPage } from "./landingPage.js";
 import { renderBannerEditor } from "./bannerEditor.js";
 import { renderFooter } from "./footer.js";
+
 import {
   clearLoggedInUser,
-  getMarketingPage,
-  saveMarketingPage,
-  setMarketingActive,
+  getMarketingDraft,
+  saveMarketingDraft,
+  addMarketingCampaign,
   setCurrentPage,
   clearCurrentPage,
 } from "./storage.js";
@@ -28,6 +29,7 @@ export function renderMarketingPage(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // Header / Nav
   const header = renderHeader(
     username,
     (key) => {
@@ -58,6 +60,7 @@ export function renderMarketingPage(username) {
   );
   app.appendChild(header);
 
+  // Layout
   const container = document.createElement("div");
   container.className = "marketing-container";
 
@@ -90,8 +93,6 @@ export function renderMarketingPage(username) {
 
       <div class="field"><label>Button text</label>
         <input id="ctaText" placeholder="Learn more"/></div>
-
-     
 
       <div class="field"><label>Background</label>
         <input id="bg" type="color"/></div>
@@ -131,6 +132,7 @@ export function renderMarketingPage(username) {
   container.append(controls, preview);
   app.append(header, container, renderFooter());
 
+  // ===== State (draft) =====
   const DEF = {
     tpl: "t1",
     title: "",
@@ -143,7 +145,7 @@ export function renderMarketingPage(username) {
     accent: "",
     font: "system-ui, -apple-system, Segoe UI, Roboto",
   };
-  const state = Object.assign({}, DEF, getMarketingPage() || {});
+  const state = Object.assign({}, DEF, getMarketingDraft() || {});
 
   const els = {
     tpl: controls.querySelector("#tpl"),
@@ -162,65 +164,67 @@ export function renderMarketingPage(username) {
     reset: controls.querySelector("#reset"),
   };
 
+  // preload to inputs
   Object.entries(state).forEach(([k, v]) => {
     if (els[k] && v) els[k].value = v;
   });
 
+  // HTML for templates
   function emailHTML(s) {
     const baseWrap = `
-    background:${s.bg || "transparent"}; color:${s.color || "#333"};
-    font-family:${s.font}; line-height:1.5; padding:18px;
-  `;
+      background:${s.bg || "transparent"}; color:${s.color || "#333"};
+      font-family:${s.font}; line-height:1.5; padding:18px;
+    `;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 12px;border-radius:8px"/>`
       : "";
     const btn = (text) => `
-    <a href="#"
-       style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
-              background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
-      ${text || "Button"}
-    </a>`;
+      <a href="#"
+         style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;
+                background:${s.accent || "#2d89ef"};color:#fff;font-weight:600">
+        ${text || "Button"}
+      </a>`;
 
     if (s.tpl === "t2") {
       return `
-      <div style="${baseWrap}">
-        <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
-          ${
-            img ||
-            `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
-          }
+        <div style="${baseWrap}">
+          <div style="padding:0 0 14px; text-align:center; background:rgba(0,0,0,.03); border-radius:8px;">
+            ${
+              img ||
+              `<div style="height:180px; display:grid; place-items:center; color:#888">Hero</div>`
+            }
+          </div>
+          <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+          <p style="margin:0 0 16px">${s.body || ""}</p>
+          ${btn(s.ctaText)}
         </div>
-        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-        <p style="margin:0 0 16px">${s.body || ""}</p>
-        ${btn(s.ctaText)}
-      </div>
-    `;
+      `;
     }
 
     if (s.tpl === "t3") {
       return `
-      <div style="${baseWrap}">
-        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-          ${img}
-          <h2 style="margin:0 0 8px">${s.title || ""}</h2>
-          <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
-          <p style="margin:0 0 16px">${s.body || ""}</p>
-          ${btn(s.ctaText)}
+        <div style="${baseWrap}">
+          <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+            ${img}
+            <h2 style="margin:0 0 8px">${s.title || ""}</h2>
+            <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+            <p style="margin:0 0 16px">${s.body || ""}</p>
+            ${btn(s.ctaText)}
+          </div>
         </div>
-      </div>
-    `;
+      `;
     }
 
-    // t1 – Clean (default)
+    // t1
     return `
-    <div style="${baseWrap}">
-      <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
-      ${img}
-      <p style="margin:0 0 16px">${s.body || ""}</p>
-      ${btn(s.ctaText)}
-    </div>
-  `;
+      <div style="${baseWrap}">
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+        ${img}
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText)}
+      </div>
+    `;
   }
 
   function render() {
@@ -239,7 +243,7 @@ export function renderMarketingPage(username) {
     const pad = 16;
     requestAnimationFrame(() => {
       const contentH = inner.getBoundingClientRect().height;
-      const baseW = els.email.getBoundingClientRect().width; // 650 default
+      const baseW = 650;
       const scaleW = (stage.width - pad) / baseW;
       const scaleH = (stage.height - pad) / contentH;
       let scale = Math.min(scaleW, scaleH);
@@ -250,9 +254,10 @@ export function renderMarketingPage(username) {
   }
 
   function persist() {
-    saveMarketingPage(state);
+    saveMarketingDraft(state);
   }
 
+  // inputs
   Object.keys(state).forEach((k) => {
     if (!els[k]) return;
     els[k].addEventListener("input", () => {
@@ -274,24 +279,8 @@ export function renderMarketingPage(username) {
   });
 
   els.goLive.addEventListener("click", () => {
-    state.active = true;
-    saveMarketingPage(state);
-    setMarketingActive(true);
+    addMarketingCampaign({ ...state, active: true });
     toast("Published");
-    [
-      "title",
-      "subtitle",
-      "body",
-      "imgUrl",
-      "ctaText",
-      "bg",
-      "color",
-      "accent",
-    ].forEach((k) => {
-      state[k] = "";
-      if (els[k]) els[k].value = "";
-    });
-    render();
   });
 
   window.addEventListener("resize", fitEmail);

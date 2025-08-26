@@ -100,20 +100,7 @@ export function renderDashboard(username) {
   const gridEmails = campaigns.querySelector("#gridEmails");
   const gridLandings = campaigns.querySelector("#gridLandings");
 
-  // helper: wrap any HTML inside a fixed square and center+scale it
-  function squareBox(innerHTML, scale = 1) {
-    const box = document.createElement("div");
-    box.className = "thumb-box";
-    const inner = document.createElement("div");
-    inner.className = "thumb-inner";
-    inner.style.transform = `translate(-50%, -50%) scale(${scale})`;
-    inner.innerHTML = innerHTML;
-    box.appendChild(inner.firstElementChild || inner);
-    return box;
-  }
-
-  // Banner thumbnails (fit into 260×260 box)
-  const BOX = 260;
+  // ---------- Thumb HTML (raw content; scaling happens in makeCard) ----------
   const bannerThumbHTML = (s, size) => {
     const [w, h] = size === "300x600" ? [300, 600] : [250, 250];
     const fs = s.fontSize || 22;
@@ -128,11 +115,11 @@ export function renderDashboard(username) {
     const shell = `
       width:${w}px;height:${h}px;
       display:grid;place-items:center;text-align:center;
-      border:2px dashed #645774;border-radius:10px;padding:10px;
-      overflow:hidden;background:${s.bg || "transparent"};
-      color:${s.color || "#333"};font-size:${fs}px;`;
+      border:2px dashed #645774;border-radius:10px;padding:10px;overflow:hidden;
+      background:${s.bg || "transparent"}; color:${
+      s.color || "#333"
+    }; font-size:${fs}px;`;
 
-    let content;
     if (s.template === "t2") {
       const dotColor = s.dotColor || "#4ade80";
       const dotSize = Number(s.dotSize || 3);
@@ -141,11 +128,13 @@ export function renderDashboard(username) {
         dotSize
       )}px, transparent ${Math.max(2, dotSize + 1)}px)`;
       const patternSize = `${dotSize * 8}px ${dotSize * 8}px`;
-      content = `<div style="${shell};background-image:${pattern};background-size:${patternSize}">
+      return `<div style="${shell};background-image:${pattern};background-size:${patternSize}">
         <div style="max-width:85%;background:#ffe4d6;border-radius:14px;padding:10px 12px;line-height:1.2">${title}${subtitle}${body}</div>
       </div>`;
-    } else if (s.template === "t3") {
-      content = `<div style="${shell}">
+    }
+
+    if (s.template === "t3") {
+      return `<div style="${shell}">
         <div style="width:90%;height:90%;display:flex;flex-direction:column;gap:10px;justify-content:center;align-items:center">
           <div style="width:100%;height:14px;background:${
             s.color || "#222"
@@ -153,17 +142,11 @@ export function renderDashboard(username) {
           <div style="display:flex;flex-direction:column;gap:6px;align-items:center">${title}${subtitle}${body}</div>
         </div>
       </div>`;
-    } else {
-      content = `<div style="${shell}">
-        <div style="max-width:90%;max-height:90%;overflow:hidden">${title}${subtitle}${body}</div>
-      </div>`;
     }
 
-    const scale = Math.min(BOX / Math.max(w, h), 1);
-    return squareBox(content, scale).outerHTML;
+    return `<div style="${shell}"><div style="max-width:90%;max-height:90%;overflow:hidden">${title}${subtitle}${body}</div></div>`;
   };
 
-  // Email thumbnail -> scaled into square
   const emailThumbHTML = (s) => {
     const base = `background:${s.bg || "transparent"}; color:${
       s.color || "#333"
@@ -177,21 +160,19 @@ export function renderDashboard(username) {
       }" style="display:inline-block;padding:10px 16px;border-radius:8px;text-decoration:none;background:${
         s.accent || "#2d89ef"
       };color:#fff;font-weight:600">${text || "Button"}</a>`;
-    const inner = `<div style="${base}">
-      <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
-      ${img}
-      <p style="margin:0 0 16px">${s.body || ""}</p>
-      ${btn(s.ctaText, s.ctaUrl)}
+    return `<div class="email-thumb" style="width:650px;border:2px dashed #645774;border-radius:12px;background:#fff;overflow:hidden;padding:8px">
+      <div style="${base}">
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+        ${img}
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+      </div>
     </div>`;
-    const scaled = `<div style="width:650px;border:2px dashed #645774;border-radius:12px;background:#fff;overflow:hidden;padding:8px">${inner}</div>`;
-    const scale = BOX / 650;
-    return squareBox(scaled, scale).outerHTML;
   };
 
-  // Landing page thumbnail -> scaled into square
   const landingThumbHTML = (s) => {
-    const wrap = `background:${s.bg || "transparent"}; color:${
+    const shell = `background:${s.bg || "transparent"}; color:${
       s.color || "#333"
     }; font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;`;
     const img = s.imgUrl
@@ -214,67 +195,83 @@ export function renderDashboard(username) {
       btnText || "Submit"
     }</button>
       </form>`;
-    const inner = `<div style="${wrap}">
-      <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
-      ${img}
-      <p style="margin:0 0 16px">${s.body || ""}</p>
-      ${btn(s.ctaText, s.ctaUrl)}
-      ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+    return `<div class="lp-thumb" style="width:1000px;border:2px dashed #645774;border-radius:12px;background:#fff;overflow:hidden;padding:8px">
+      <div style="${shell}">
+        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
+        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+        ${img}
+        <p style="margin:0 0 16px">${s.body || ""}</p>
+        ${btn(s.ctaText, s.ctaUrl)}
+        ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+      </div>
     </div>`;
-    const scaled = `<div style="width:1000px;border:2px dashed #645774;border-radius:12px;background:#fff;overflow:hidden;padding:8px">${inner}</div>`;
-    const scale = BOX / 1000;
-    return squareBox(scaled, scale).outerHTML;
   };
 
-  // card wrapper with close
+  // ---------- Card factory with fixed slot & auto fit ----------
+  const BOX = 260,
+    PAD = 10;
+  function fitInto(box, content) {
+    content.style.position = "absolute";
+    content.style.transformOrigin = "top left";
+    requestAnimationFrame(() => {
+      const w = content.offsetWidth || 1;
+      const h = content.offsetHeight || 1;
+      let scale = Math.min((BOX - PAD * 2) / w, (BOX - PAD * 2) / h);
+      scale = Math.max(0.1, Math.min(scale, 1.2));
+      const left = (BOX - w * scale) / 2;
+      const top = (BOX - h * scale) / 2;
+      content.style.transform = `scale(${scale})`;
+      content.style.left = `${left}px`;
+      content.style.top = `${top}px`;
+    });
+  }
+
   function makeCard(html, onClose) {
     const card = document.createElement("div");
     card.className = "campaign-card";
 
-    const cell = document.createElement("div");
-    cell.className = "thumb-box";
-    cell.innerHTML = html; // html is already thumb-box OR content – normalize below
-    const contentEl = cell.querySelector(".thumb-box")
-      ? cell.querySelector(".thumb-box")
-      : cell;
+    const frame = document.createElement("div");
+    frame.className = "slot";
+    frame.style.position = "relative";
 
-    const btn = document.createElement("button");
-    btn.className = "card-close";
-    btn.type = "button";
-    btn.textContent = "×";
-    btn.title = "Delete";
-    btn.addEventListener("click", (e) => {
+    const close = document.createElement("button");
+    close.textContent = "×";
+    close.className = "card-close";
+    close.title = "Delete";
+    close.addEventListener("click", (e) => {
       e.stopPropagation();
       onClose();
     });
 
-    // If html already produced a thumb-box, use it; else wrap it.
-    const host = document.createElement("div");
-    host.className = "thumb-box";
-    const inner = document.createElement("div");
-    inner.className = "thumb-inner";
-    inner.appendChild(contentEl.firstElementChild || contentEl);
-    host.append(btn, inner);
+    const wrap = document.createElement("div");
+    wrap.innerHTML = html;
+    const content = wrap.firstElementChild;
 
-    card.appendChild(host);
+    frame.appendChild(content);
+    frame.appendChild(close);
+    card.appendChild(frame);
+
+    fitInto(frame, content);
     return card;
   }
 
-  // Banners (up to 3)
-  const banners = getBanners() || {};
-  const bannerEntries = Object.entries(banners).sort((a, b) => {
-    const A = (a[1] && a[1].updatedAt) || 0;
-    const B = (b[1] && b[1].updatedAt) || 0;
-    return B - A; // newest first
-  });
+  function makePlaceholder() {
+    const card = document.createElement("div");
+    card.className = "campaign-card";
+    const frame = document.createElement("div");
+    frame.className = "slot placeholder-surface";
+    card.appendChild(frame);
+    return card;
+  }
 
+  // ---------- Populate Banners (max 3) ----------
+  const banners = getBanners() || {};
+  const entries = Object.entries(banners); // keep insertion order
   let bannerCount = 0;
-  for (const [key, data] of bannerEntries) {
+  for (const [key, data] of entries) {
     if (data && data.active && bannerCount < 3) {
-      const html = bannerThumbHTML(data, key);
       gridBanners.appendChild(
-        makeCard(html, () => {
+        makeCard(bannerThumbHTML(data, data.size || key), () => {
           setBannerActive(key, false);
           toast("Removed from LIVE");
           renderDashboard(username);
@@ -284,21 +281,16 @@ export function renderDashboard(username) {
     }
   }
   while (bannerCount < 3) {
-    const ph = document.createElement("div");
-    ph.className = "thumb-box placeholder-surface";
-    gridBanners.appendChild(ph);
+    gridBanners.appendChild(makePlaceholder());
     bannerCount++;
   }
 
-  // Marketing (up to 3)
+  // ---------- Populate Emails (max 3) ----------
   const M = getMarketingPage();
   const marketingList = Array.isArray(M) ? M : M ? [M] : [];
   let emailCount = 0;
-  marketingList
-    .filter((m) => m && m.active)
-    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-    .slice(0, 3)
-    .forEach((m) => {
+  marketingList.forEach((m) => {
+    if (m && m.active && emailCount < 3) {
       gridEmails.appendChild(
         makeCard(emailThumbHTML(m), () => {
           setMarketingActive(false);
@@ -307,23 +299,19 @@ export function renderDashboard(username) {
         })
       );
       emailCount++;
-    });
+    }
+  });
   while (emailCount < 3) {
-    const ph = document.createElement("div");
-    ph.className = "thumb-box placeholder-surface";
-    gridEmails.appendChild(ph);
+    gridEmails.appendChild(makePlaceholder());
     emailCount++;
   }
 
-  // Landing pages (up to 3)
+  // ---------- Populate Landings (max 3) ----------
   const L = getLandingPage();
   const landingList = Array.isArray(L) ? L : L ? [L] : [];
   let landCount = 0;
-  landingList
-    .filter((l) => l && l.active)
-    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-    .slice(0, 3)
-    .forEach((l) => {
+  landingList.forEach((l) => {
+    if (l && l.active && landCount < 3) {
       gridLandings.appendChild(
         makeCard(landingThumbHTML(l), () => {
           setLandingActive(false);
@@ -332,11 +320,10 @@ export function renderDashboard(username) {
         })
       );
       landCount++;
-    });
+    }
+  });
   while (landCount < 3) {
-    const ph = document.createElement("div");
-    ph.className = "thumb-box placeholder-surface";
-    gridLandings.appendChild(ph);
+    gridLandings.appendChild(makePlaceholder());
     landCount++;
   }
 

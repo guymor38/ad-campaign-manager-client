@@ -1,4 +1,3 @@
-/* ----- Shell ----- */
 .dashboard-container {
   width: min(1200px, 100%);
   margin: 0 auto;
@@ -24,7 +23,7 @@
 }
 .hero__subtitle {
   font-size: clamp(1.05rem, 2.3vw, 1.4rem);
-  color: #ffffff;
+  color: #fff;
   opacity: 0.95;
   line-height: 1.6;
   margin: 0 0 24px;
@@ -38,60 +37,63 @@
   font-weight: 800;
   cursor: pointer;
   box-shadow: 2px 2px 4px #514864;
-  transition: filter 0.15s ease;
+  transition: filter 0.15s;
 }
 .btn--cta:hover {
   filter: brightness(0.95);
 }
 
-/* ===== Active Campaigns ===== */
+/* Active Campaigns */
 .campaigns {
   margin: 60px auto 80px;
   max-width: 1100px;
 }
 .campaigns__title {
   font-size: clamp(1.4rem, 2.8vw, 1.8rem);
-  color: #ffffff;
+  color: #fff;
   margin: 0 0 20px;
   font-weight: 800;
 }
-.campaigns__group h3 {
-  margin: 0 0 8px;
+.campaigns__group > h3 {
+  margin: 10px 0;
   color: #80b9b1;
 }
 .campaigns__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 260px);
   gap: 28px;
 }
 @media (max-width: 980px) {
   .campaigns__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 260px);
   }
 }
 @media (max-width: 640px) {
   .campaigns__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 260px;
   }
 }
 
-/* Card with fixed square frame */
+/* Fixed slot & card */
 .campaign-card {
-  position: relative;
-}
-.campaign-card__frame {
   width: 260px;
   height: 260px;
-  border: 2px dashed #645774;
-  border-radius: 12px;
-  background: #fff;
-  overflow: hidden;
+  position: relative;
   display: grid;
   place-items: center;
+}
+.slot {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed #c9c1d4;
+  border-radius: 12px;
+  background: #fff;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  position: relative;
 }
 
-/* Close button pinned to the frame */
+/* Close button */
 .card-close {
   position: absolute;
   top: 6px;
@@ -105,15 +107,15 @@
   cursor: pointer;
   line-height: 22px;
   font-size: 16px;
-  z-index: 3;
+  z-index: 2;
 }
 
 /* Placeholder surface */
 .placeholder-surface {
   background-image: repeating-linear-gradient(
     -45deg,
-    rgba(255, 255, 255, 0.18) 0 12px,
-    rgba(255, 255, 255, 0.06) 12px 24px
+    rgba(0, 0, 0, 0.06) 0 12px,
+    rgba(0, 0, 0, 0.02) 12px 24px
   );
   border-radius: 12px;
 }

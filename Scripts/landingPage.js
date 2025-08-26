@@ -8,9 +8,9 @@ import { renderFooter } from "./footer.js";
 
 import {
   clearLoggedInUser,
-  getLandingPage,
-  saveLandingPage,
-  setLandingActive,
+  getLandingDraft,
+  saveLandingDraft,
+  addLandingCampaign,
   setCurrentPage,
   clearCurrentPage,
 } from "./storage.js";
@@ -29,11 +29,9 @@ export function renderLandingPage(username) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header
   const header = renderHeader(
     username,
     (key) => {
-      // onNavigate
       setCurrentPage(key);
       switch (key) {
         case "dashboard":
@@ -53,7 +51,6 @@ export function renderLandingPage(username) {
       }
     },
     () => {
-      // onLogout
       clearLoggedInUser();
       clearCurrentPage();
       renderLogin();
@@ -66,31 +63,32 @@ export function renderLandingPage(username) {
   const container = document.createElement("div");
   container.className = "landing-container";
 
-  const controls = document.createElement("div");
-  controls.className = "section";
-  controls.innerHTML = `
-    <h2 style="margin-bottom:10px">Landing Page Builder</h2>
+  const form = document.createElement("div");
+  form.className = "section";
+  form.innerHTML = `
+    <h2>Landing Page Builder</h2>
 
     <div class="form-grid">
-      <div class="field"><label>Template</label>
+      <div class="field">
+        <label>Template</label>
         <select id="tpl">
-          <option value="t1">Template 1 – Clean</option>
+          <option value="t1">Template 1 – Simple</option>
           <option value="t2">Template 2 – Hero</option>
           <option value="t3">Template 3 – Split</option>
         </select>
       </div>
 
       <div class="field"><label>Main title</label>
-        <input id="title" placeholder="Bannerist helps you launch faster"/></div>
+        <input id="title" placeholder="Bannerist helps you launch fast"/></div>
 
       <div class="field"><label>Subtitle</label>
-        <input id="subtitle" placeholder="Create and manage ads, emails & landings in minutes."/></div>
+        <input id="subtitle" placeholder="Create and manage ads, emails, and more"/></div>
 
       <div class="field"><label>Paragraph</label>
         <textarea id="body" placeholder="Design quickly, preview instantly, and save your work locally."></textarea></div>
 
       <div class="field"><label>Hero Image URL</label>
-        <input id="imgUrl" placeholder="https://…"/></div>
+        <input id="imgUrl" placeholder="https://..."/></div>
 
       <div class="field"><label>CTA Text</label>
         <input id="ctaText" placeholder="Start free"/></div>
@@ -107,7 +105,8 @@ export function renderLandingPage(username) {
       <div class="field"><label>Accent color (CTA)</label>
         <input id="accent" type="color"/></div>
 
-      <div class="field"><label>Font family</label>
+      <div class="field">
+        <label>Font family</label>
         <select id="font">
           <option value="system-ui, -apple-system, Segoe UI, Roboto">System</option>
           <option value="Georgia, serif">Serif</option>
@@ -115,12 +114,10 @@ export function renderLandingPage(username) {
           <option value="'Courier New', monospace">Mono</option>
         </select>
       </div>
-    </div>
 
-    <h3 style="margin:16px 0 8px">Lead Form</h3>
-    <div class="form-grid">
-      <div class="field"><label>Form Title</label>
+      <div class="field"><label>Lead Form Title</label>
         <input id="leadTitle" placeholder="Stay updated"/></div>
+
       <div class="field"><label>Submit Button</label>
         <input id="leadBtn" placeholder="Sign Up"/></div>
     </div>
@@ -134,17 +131,18 @@ export function renderLandingPage(username) {
   const preview = document.createElement("div");
   preview.className = "section landing-preview";
   preview.innerHTML = `
+    <h3 style="margin-bottom:10px">Live Preview</h3>
     <div class="lp-stage" id="lp-stage">
-      <div id="canvas" class="lp-canvas placeholder-surface" style="width:1000px"></div>
+      <div class="lp-canvas placeholder-surface" id="lp" style="width:1000px"></div>
     </div>
   `;
 
-  container.append(controls, preview);
+  container.append(form, preview);
   app.append(header, container, renderFooter());
 
-  // State
+  // ===== State (draft) =====
   const DEF = {
-    tpl: "t1",
+    tpl: "t3",
     title: "",
     subtitle: "",
     body: "",
@@ -158,40 +156,40 @@ export function renderLandingPage(username) {
     leadTitle: "",
     leadBtn: "",
   };
-  const state = Object.assign({}, DEF, getLandingPage() || {});
+  const state = Object.assign({}, DEF, getLandingDraft() || {});
 
   const els = {
-    tpl: controls.querySelector("#tpl"),
-    title: controls.querySelector("#title"),
-    subtitle: controls.querySelector("#subtitle"),
-    body: controls.querySelector("#body"),
-    imgUrl: controls.querySelector("#imgUrl"),
-    ctaText: controls.querySelector("#ctaText"),
-    ctaUrl: controls.querySelector("#ctaUrl"),
-    bg: controls.querySelector("#bg"),
-    color: controls.querySelector("#color"),
-    accent: controls.querySelector("#accent"),
-    font: controls.querySelector("#font"),
-    leadTitle: controls.querySelector("#leadTitle"),
-    leadBtn: controls.querySelector("#leadBtn"),
+    tpl: form.querySelector("#tpl"),
+    title: form.querySelector("#title"),
+    subtitle: form.querySelector("#subtitle"),
+    body: form.querySelector("#body"),
+    imgUrl: form.querySelector("#imgUrl"),
+    ctaText: form.querySelector("#ctaText"),
+    ctaUrl: form.querySelector("#ctaUrl"),
+    bg: form.querySelector("#bg"),
+    color: form.querySelector("#color"),
+    accent: form.querySelector("#accent"),
+    font: form.querySelector("#font"),
+    leadTitle: form.querySelector("#leadTitle"),
+    leadBtn: form.querySelector("#leadBtn"),
     stage: preview.querySelector("#lp-stage"),
-    canvas: preview.querySelector("#canvas"),
-    goLive: controls.querySelector("#go-live"),
-    reset: controls.querySelector("#reset"),
+    lp: preview.querySelector("#lp"),
+    goLive: form.querySelector("#go-live"),
+    reset: form.querySelector("#reset"),
   };
 
+  // preload inputs
   Object.entries(state).forEach(([k, v]) => {
     if (els[k] && v) els[k].value = v;
   });
 
+  // HTML for templates
   const btn = (text, url, accent) =>
-    `<a href="${url || "#"}" style="
-      display:inline-block;padding:12px 18px;border-radius:10px;
-      background:${
-        accent || "#2d89ef"
-      };color:#fff;text-decoration:none;font-weight:700">
-      ${text || "CTA"}
-    </a>`;
+    `<a href="${
+      url || "#"
+    }" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
+      accent || "#2d89ef"
+    };color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
 
   const leadForm = (title, btnText, accent) => `
     <form onsubmit="return false" style="margin-top:16px; display:grid; gap:10px">
@@ -200,101 +198,92 @@ export function renderLandingPage(username) {
       <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
       <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${
         accent || "#2d89ef"
-      };color:#fff;font-weight:700;cursor:pointer">
-        ${btnText || "Submit"}
-      </button>
-    </form>
-  `;
+      };color:#fff;font-weight:700;cursor:pointer">${
+    btnText || "Submit"
+  }</button>
+    </form>`;
 
-  function tplHTML(s) {
-    const shell = `
-      background:${s.bg || "transparent"}; color:${s.color || "#333"};
-      font-family:${s.font}; width:100%; max-width:1000px; margin:0 auto;
-      line-height:1.5; padding:18px;
-    `;
+  function lpHTML(s) {
+    const shell = `background:${s.bg || "transparent"}; color:${
+      s.color || "#333"
+    }; font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;`;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 14px;border-radius:12px"/>`
       : "";
 
-    if (s.bg) els.canvas.classList.remove("placeholder-surface");
-    else els.canvas.classList.add("placeholder-surface");
-
     if (s.tpl === "t2") {
-      return `
-        <div style="${shell}">
-          <div style="background:rgba(0,0,0,.05);border-radius:12px;padding:16px;text-align:center;margin-bottom:14px">
-            ${
-              img ||
-              `<div style="height:220px;display:grid;place-items:center;color:#888">Hero image</div>`
-            }
-          </div>
-          <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-          <p style="margin:0 0 16px">${s.body || ""}</p>
-          ${btn(s.ctaText, s.ctaUrl, s.accent)}
-          ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+      return `<div style="${shell}">
+        <div style="padding:0 0 14px;text-align:center;background:rgba(0,0,0,.03);border-radius:8px;">
+          ${
+            img ||
+            `<div style="height:220px;display:grid;place-items:center;color:#888">Hero</div>`
+          }
         </div>
-      `;
-    }
-
-    if (s.tpl === "t3") {
-      return `
-        <div style="${shell}">
-          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:18px">
-            <div>
-              <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-              <h3 style="margin:0 0 12px;opacity:.85">${s.subtitle || ""}</h3>
-              <p style="margin:0 0 16px">${s.body || ""}</p>
-              ${btn(s.ctaText, s.ctaUrl, s.accent)}
-              ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
-            </div>
-            <div>
-              ${
-                img ||
-                `<div style="height:260px;display:grid;place-items:center;color:#888;background:rgba(0,0,0,.05);border-radius:12px">Image</div>`
-              }
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // t1
-    return `
-      <div style="${shell}">
-        <h1 style="margin:0 0 8px">${s.title || ""}</h1>
-        <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
-        ${img}
+        <h1 style="margin:0 0 10px">${s.title || ""}</h1>
         <p style="margin:0 0 16px">${s.body || ""}</p>
         ${btn(s.ctaText, s.ctaUrl, s.accent)}
         ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
-      </div>
-    `;
+      </div>`;
+    }
+
+    if (s.tpl === "t3") {
+      return `<div style="${shell}">
+        <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:center">
+          <div>
+            <h1 style="margin:0 0 10px">${s.title || ""}</h1>
+            <p style="margin:0 0 14px;opacity:.9">${s.subtitle || ""}</p>
+            <p style="margin:0 0 16px">${s.body || ""}</p>
+            ${btn(s.ctaText, s.ctaUrl, s.accent)}
+            ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+          </div>
+          <div>${
+            img ||
+            `<div style="height:300px;border-radius:12px;background:rgba(0,0,0,.06)"></div>`
+          }</div>
+        </div>
+      </div>`;
+    }
+
+    // t1
+    return `<div style="${shell}">
+      <h1 style="margin:0 0 10px">${s.title || ""}</h1>
+      <h3 style="margin:0 0 14px;opacity:.85">${s.subtitle || ""}</h3>
+      ${img}
+      <p style="margin:0 0 16px">${s.body || ""}</p>
+      ${btn(s.ctaText, s.ctaUrl, s.accent)}
+      ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
+    </div>`;
   }
 
   function render() {
-    els.canvas.innerHTML = tplHTML(state);
-    fitLanding();
+    const s = state;
+    if (s.bg) els.lp.classList.remove("placeholder-surface");
+    else els.lp.classList.add("placeholder-surface");
+    els.lp.innerHTML = lpHTML(s);
+    fitLP();
   }
 
-  function fitLanding() {
+  function fitLP() {
     const stage = els.stage.getBoundingClientRect();
-    const inner = els.canvas.firstElementChild;
+    const inner = els.lp.firstElementChild;
     if (!inner) return;
-    els.canvas.style.transformOrigin = "top left";
+    els.lp.style.transformOrigin = "top left";
     const pad = 16;
     requestAnimationFrame(() => {
       const contentH = inner.getBoundingClientRect().height;
-      const scaleW = (stage.width - pad) / 1000;
-      const scaleH = (stage.height - pad) / contentH;
-      let scale = Math.min(scaleW, scaleH);
+      const baseW = 1000;
+      let scale = Math.min(
+        (stage.width - pad) / baseW,
+        (stage.height - pad) / contentH
+      );
       if (!isFinite(scale) || scale <= 0) scale = 1;
       if (scale > 1.0) scale = 1.0;
-      els.canvas.style.transform = `scale(${scale})`;
+      els.lp.style.transform = `scale(${scale})`;
     });
   }
 
   function persist() {
-    saveLandingPage(state);
+    saveLandingDraft(state);
   }
 
   Object.keys(state).forEach((k) => {
@@ -308,7 +297,7 @@ export function renderLandingPage(username) {
   });
 
   els.reset.addEventListener("click", () => {
-    Object.assign(state, { ...DEF });
+    Object.assign(state, { ...DEF, font: state.font || DEF.font });
     Object.keys(state).forEach((k) => {
       if (els[k]) els[k].value = state[k] || "";
     });
@@ -318,30 +307,10 @@ export function renderLandingPage(username) {
   });
 
   els.goLive.addEventListener("click", () => {
-    state.active = true;
-    saveLandingPage(state);
-    setLandingActive(true);
+    addLandingCampaign({ ...state, active: true });
     toast("Published");
-    // איפוס שדות התוכן בלבד
-    [
-      "title",
-      "subtitle",
-      "body",
-      "imgUrl",
-      "ctaText",
-      "ctaUrl",
-      "bg",
-      "color",
-      "accent",
-      "leadTitle",
-      "leadBtn",
-    ].forEach((k) => {
-      state[k] = "";
-      if (els[k]) els[k].value = "";
-    });
-    render();
   });
 
-  window.addEventListener("resize", fitLanding);
+  window.addEventListener("resize", fitLP);
   render();
 }
