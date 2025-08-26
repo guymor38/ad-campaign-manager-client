@@ -25,6 +25,7 @@ function toast(msg, warn = false) {
 
 export function renderLandingPage(username) {
   loadStyle("./styles/main.css");
+  loadStyle("./styles/landingPage.css"); // חשוב: טוענים גם את ה-CSS הייעודי
 
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -185,28 +186,18 @@ export function renderLandingPage(username) {
 
   // HTML for templates
   const btn = (text, url, accent) =>
-    `<a href="${
-      url || "#"
-    }" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${
-      accent || "#2d89ef"
-    };color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
+    `<a href="${url || "#"}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${accent || "#2d89ef"};color:#fff;text-decoration:none;font-weight:700">${text || "CTA"}</a>`;
 
   const leadForm = (title, btnText, accent) => `
     <form onsubmit="return false" style="margin-top:16px; display:grid; gap:10px">
       <h3 style="margin:0 0 6px">${title || ""}</h3>
       <input placeholder="Full name" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
       <input type="email" placeholder="Email" style="padding:10px 12px;border-radius:10px;border:2px solid #645774"/>
-      <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${
-        accent || "#2d89ef"
-      };color:#fff;font-weight:700;cursor:pointer">${
-    btnText || "Submit"
-  }</button>
+      <button type="submit" style="padding:10px 14px;border:none;border-radius:10px;background:${accent || "#2d89ef"};color:#fff;font-weight:700;cursor:pointer">${btnText || "Submit"}</button>
     </form>`;
 
   function lpHTML(s) {
-    const shell = `background:${s.bg || "transparent"}; color:${
-      s.color || "#333"
-    }; font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;`;
+    const shell = `background:${s.bg || "transparent"}; color:${s.color || "#333"}; font-family:${s.font}; width:1000px; padding:18px; line-height:1.5;`;
     const img = s.imgUrl
       ? `<img src="${s.imgUrl}" alt="" style="max-width:100%;display:block;margin:0 auto 14px;border-radius:12px"/>`
       : "";
@@ -214,10 +205,7 @@ export function renderLandingPage(username) {
     if (s.tpl === "t2") {
       return `<div style="${shell}">
         <div style="padding:0 0 14px;text-align:center;background:rgba(0,0,0,.03);border-radius:8px;">
-          ${
-            img ||
-            `<div style="height:220px;display:grid;place-items:center;color:#888">Hero</div>`
-          }
+          ${img || `<div style="height:220px;display:grid;place-items:center;color:#888">Hero</div>`}
         </div>
         <h1 style="margin:0 0 10px">${s.title || ""}</h1>
         <p style="margin:0 0 16px">${s.body || ""}</p>
@@ -236,10 +224,7 @@ export function renderLandingPage(username) {
             ${btn(s.ctaText, s.ctaUrl, s.accent)}
             ${leadForm(s.leadTitle, s.leadBtn, s.accent)}
           </div>
-          <div>${
-            img ||
-            `<div style="height:300px;border-radius:12px;background:rgba(0,0,0,.06)"></div>`
-          }</div>
+          <div>${img || `<div style="height:300px;border-radius:12px;background:rgba(0,0,0,.06)"></div>`}</div>
         </div>
       </div>`;
     }
@@ -263,23 +248,38 @@ export function renderLandingPage(username) {
     fitLP();
   }
 
+  // ==== מרכוז ו-scale מדויקים ====
   function fitLP() {
     const stage = els.stage.getBoundingClientRect();
     const inner = els.lp.firstElementChild;
     if (!inner) return;
-    els.lp.style.transformOrigin = "top left";
+
     const pad = 16;
-    requestAnimationFrame(() => {
-      const contentH = inner.getBoundingClientRect().height;
-      const baseW = 1000;
-      let scale = Math.min(
-        (stage.width - pad) / baseW,
-        (stage.height - pad) / contentH
-      );
-      if (!isFinite(scale) || scale <= 0) scale = 1;
-      if (scale > 1.0) scale = 1.0;
-      els.lp.style.transform = `scale(${scale})`;
-    });
+    const baseW = 1000;
+
+    // גובה התוכן בפועל (לפני scale)
+    const contentH = inner.getBoundingClientRect().height;
+
+    // חישוב scale כך שייכנס גם לרוחב וגם לגובה
+    let scale = Math.min(
+      (stage.width - pad) / baseW,
+      (stage.height - pad) / contentH
+    );
+    if (!isFinite(scale) || scale <= 0) scale = 1;
+    if (scale > 1) scale = 1;
+
+    // חישוב גובה לאחר scale והיסט אנכי כדי למרכז גם לגובה
+    const scaledH = contentH * scale;
+    const offsetY = Math.max(0, (stage.height - scaledH) / 2);
+
+    // מרכוז אופקי אמיתי: left:50% + translateX(-50%)
+    els.lp.style.position = "relative";
+    els.lp.style.left = "50%";
+    els.lp.style.top = offsetY + "px";
+    els.lp.style.justifySelf = "start"; // לא מסתמכים על center של ה-grid
+    els.lp.style.alignSelf = "start";
+    els.lp.style.transformOrigin = "top left";
+    els.lp.style.transform = `translateX(-50%) scale(${scale})`;
   }
 
   function persist() {
