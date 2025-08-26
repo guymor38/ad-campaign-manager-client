@@ -253,32 +253,31 @@ export function renderLandingPage(username) {
 
   // מרכוז אמיתי בתוך הריבוע הלבן
   function fitLP() {
-    const stage = els.stage.getBoundingClientRect();
+    const stageBox = els.stage.getBoundingClientRect();
     const inner = els.lp.firstElementChild;
     if (!inner) return;
-
+  
     const pad = 16;
-    const baseW = 1000;
-
-    // גובה התוכן בפועל (לפני scale)
+    const baseW = 1000;                          // רוחב הקנבס המקורי (כמו אצלך)
     const contentH = inner.getBoundingClientRect().height;
-
-    // חישוב scale כך שייכנס לרוחב/גובה
-    let scale = Math.min(
-      (stage.width - pad) / baseW,
-      (stage.height - pad) / contentH
-    );
-    if (!isFinite(scale) || scale <= 0) scale = 1;
-    if (scale > 1) scale = 1;
-
-    // מגדירים ל-wrap את הגודל הסופי (אחרי scale) – כדי שה-grid ימקד במדויק
-    els.wrap.style.width = baseW * scale + "px";
-    els.wrap.style.height = contentH * scale + "px";
-
-    // ה-canvas נשאר בגודל המקורי ומוקטן פנימה
+  
+    const availW = stageBox.width - pad;
+    const availH = stageBox.height - pad;
+  
+    // אותו רעיון כמו בבאנרים: scale לפי הרוחב/גובה הפנויים
+    let scale = Math.min(availW / baseW, availH / contentH);
+    scale = Math.max(0.1, Math.min(scale, 1));   // תחום סביר
+  
+    const scaledW = baseW * scale;
+    const scaledH = contentH * scale;
+  
+    const left = (stageBox.width  - scaledW) / 2;
+    const top  = (stageBox.height - scaledH) / 2;
+  
     els.lp.style.transformOrigin = "top left";
-    els.lp.style.transform = `scale(${scale})`;
+    els.lp.style.transform = `translate(${left}px, ${top}px) scale(${scale})`;
   }
+  
 
   function persist() {
     saveLandingDraft(state);
