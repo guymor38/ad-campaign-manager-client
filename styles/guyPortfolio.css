@@ -119,12 +119,12 @@
   background: #1f2937;
   border-color: #1f2937;
   color: #f7df1e;
-} /* JS */
+}
 .badge.lang.ts {
   background: #1f2937;
   border-color: #1f2937;
   color: #3178c6;
-} /* TS */
+}
 .badge.lang.html {
   background: #fff3ed;
   border-color: #ffd8c2;
@@ -155,7 +155,6 @@
   border-color: #e5e7eb;
   color: #24292e;
 }
-/* neutral fallback */
 .badge.lang.neutral {
   background: #f3f6fb;
   border-color: #e8eef7;
@@ -220,11 +219,18 @@
   min-height: 190px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
-.card-right img {
+
+/* Preview image + fallback placeholder */
+.repo-preview {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  background: #0f172a;
+}
+.repo-preview.fallback {
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  border: 1px solid #e5e7eb;
 }
 
 /* ===== Skeletons ===== */
@@ -256,21 +262,21 @@
 .sk-line.w40 {
   width: 40%;
 }
-.sk-badges {
-  height: 26px;
-  width: 70%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #f0f2f7, #e9edf5, #f0f2f7);
-  background-size: 200% 100%;
-  animation: shimmer 1.05s infinite;
-}
+.sk-badges,
 .sk-buttons {
-  height: 34px;
-  width: 40%;
   border-radius: 12px;
   background: linear-gradient(90deg, #f0f2f7, #e9edf5, #f0f2f7);
   background-size: 200% 100%;
   animation: shimmer 1.05s infinite;
+}
+.sk-badges {
+  height: 26px;
+  width: 70%;
+  border-radius: 999px;
+}
+.sk-buttons {
+  height: 34px;
+  width: 40%;
 }
 .sk-right {
   border-radius: 14px;

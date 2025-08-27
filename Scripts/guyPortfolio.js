@@ -18,9 +18,6 @@ import {
 const USER = "guymor38";
 
 // ---------- Helpers ----------
-function ogImage(owner, repo) {
-  return `https://opengraph.githubassets.com/1/${owner}/${repo}`;
-}
 function friendlyDate(iso) {
   try {
     return new Date(iso).toLocaleDateString(undefined, {
@@ -67,6 +64,43 @@ async function fetchLanguages(fullName) {
   } catch {
     return [];
   }
+}
+
+/* ---------- Preview image helpers (fallback chain) ----------
+   1) Try preview.png/screenshot.png from repo (root or docs/)
+   2) Try GitHub OpenGraph (with staggered delay)
+   3) Fallback to a clean placeholder (CSS .fallback)
+----------------------------------------------------------- */
+function previewCandidates(owner, repo) {
+  const raw = (p) =>
+    `https://raw.githubusercontent.com/${owner}/${repo}/main/${p}`;
+  return [
+    raw("preview.png"),
+    raw("screenshot.png"),
+    raw("docs/preview.png"),
+    raw("docs/screenshot.png"),
+    // OG last (can rate-limit)
+    `https://opengraph.githubassets.com/preview/${owner}/${repo}`,
+  ];
+}
+
+function loadPreview(imgEl, urls, startDelay = 0) {
+  let i = 0;
+  const tryNext = (delay = 0) => {
+    if (i >= urls.length) {
+      imgEl.classList.add("fallback");
+      imgEl.src = "";
+      return;
+    }
+    const url = urls[i++];
+    setTimeout(() => {
+      imgEl.onerror = () => tryNext(150);
+      imgEl.onload = () => imgEl.classList.remove("fallback");
+      imgEl.referrerPolicy = "no-referrer";
+      imgEl.src = url;
+    }, delay);
+  };
+  tryNext(startDelay);
 }
 
 // language badge helper
@@ -183,7 +217,6 @@ export async function renderPortfolio(username) {
       </a>
       <a class="contact-card" href="https://www.linkedin.com/in/guy-mor-25682a210/" target="_blank" rel="noopener">
         <span class="icon">${inSvg()}</span>
-        
       </a>
     </div>
   `;
@@ -238,9 +271,9 @@ export async function renderPortfolio(username) {
             <div class="actions">${homepageBtn}${repoBtn}</div>
           </div>
           <div class="card-right">
-            <img src="${ogImage(USER, r.name)}" alt="${
-          r.name
-        } preview" loading="lazy" />
+            <img class="repo-preview fallback" alt="${
+              r.name
+            } preview" loading="lazy" />
           </div>
         </article>
       `;
@@ -248,6 +281,14 @@ export async function renderPortfolio(username) {
       .join("");
 
     cards.innerHTML = html || `<p class="empty">No projects found.</p>`;
+
+    // Load previews with fallback chain and stagger to avoid 429
+    const previews = cards.querySelectorAll(".repo-preview");
+    repos.forEach((r, idx) => {
+      const el = previews[idx];
+      const urls = previewCandidates(USER, r.name);
+      loadPreview(el, urls, 120 * idx);
+    });
   } catch (e) {
     console.error(e);
     cards.innerHTML = `<p class="error">Failed to load projects: ${e.message}</p>`;
@@ -262,5 +303,5 @@ function ghSvg() {
   return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.8-.26.8-.58v-2.02c-3.26.71-3.95-1.4-3.95-1.4-.53-1.35-1.3-1.71-1.3-1.71-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.21 1.79 1.21 1.04 1.78 2.74 1.27 3.41.97.11-.76.4-1.27.72-1.56-2.6-.3-5.33-1.3-5.33-5.79 0-1.28.46-2.33 1.21-3.15-.12-.3-.52-1.52.12-3.16 0 0 .98-.31 3.2 1.2a11.03 11.03 0 0 1 5.82 0c2.22-1.51 3.2-1.2 3.2-1.2.64 1.64.24 2.86.12 3.16.76.82 1.21 1.87 1.21 3.15 0 4.5-2.73 5.49-5.34 5.78.41.35.77 1.03.77 2.07v3.06c0 .32.21.69.81.57A11.5 11.5 0 0 0 12 .5z"/></svg>`;
 }
 function inSvg() {
-  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.56c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.93v5.66H9.33V9h3.41v1.56h.05c.47-.88 1.62-1.8 3.33-1.8 3.56 0 4.22 2.34 4.22 5.39v6.3zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>`;
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.56c0-1.33-.02-3.03-1.85-3.03-1.86 0-2.15 1.45-2.15 2.93v5.66H9.33V9h3.56v11.45zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45z"/></svg>`;
 }
