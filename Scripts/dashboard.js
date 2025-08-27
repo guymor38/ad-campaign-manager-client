@@ -38,22 +38,17 @@ export function renderDashboard(username) {
       setCurrentPage(key);
       switch (key) {
         case "dashboard":
-          renderDashboard(username);
-          break;
+          return renderDashboard(username);
         case "banners":
-          renderBannerEditor(username);
-          break;
+          return renderBannerEditor(username);
         case "marketing":
-          renderMarketingPage(username);
-          break;
+          return renderMarketingPage(username);
         case "landing":
-          renderLandingPage(username);
-          break;
+          return renderLandingPage(username);
         case "about":
-          renderAbout(username);
-          break;
+          return renderAbout(username);
         default:
-          renderDashboard(username);
+          return renderDashboard(username);
       }
     },
     () => {
@@ -104,7 +99,7 @@ export function renderDashboard(username) {
   const gridEmails = campaigns.querySelector("#gridEmails");
   const gridLandings = campaigns.querySelector("#gridLandings");
 
-  // ---------- Thumb HTML (raw content; scaling happens in makeCard) ----------
+  // ---------- Thumbs (raw html) ----------
   const bannerThumbHTML = (s, size) => {
     const [w, h] = size === "300x600" ? [300, 600] : [250, 250];
     const fs = s.fontSize || 22;
@@ -115,10 +110,8 @@ export function renderDashboard(username) {
       ? `<div style="opacity:.9">${s.subtitle}</div>`
       : "";
     const body = s.body ? `<div style="opacity:.95">${s.body}</div>` : "";
-
     const shell = `
-      width:${w}px;height:${h}px;
-      display:grid;place-items:center;text-align:center;
+      width:${w}px;height:${h}px;display:grid;place-items:center;text-align:center;
       border:2px dashed #645774;border-radius:10px;padding:10px;overflow:hidden;
       background:${s.bg || "transparent"}; color:${
       s.color || "#333"
@@ -211,51 +204,98 @@ export function renderDashboard(username) {
     </div>`;
   };
 
-  // ---------- Card factory with fixed slot & auto fit ----------
+  // ---------- Card factory with stable scaling ----------
   const BOX = 260,
     PAD = 10;
-  function fitInto(box, content) {
-    content.style.position = "absolute";
-    content.style.transformOrigin = "top left";
-    requestAnimationFrame(() => {
-      const w = content.offsetWidth || 1;
-      const h = content.offsetHeight || 1;
-      let scale = Math.min((BOX - PAD * 2) / w, (BOX - PAD * 2) / h);
-      scale = Math.max(0.1, Math.min(scale, 1.2));
-      const left = (BOX - w * scale) / 2;
-      const top = (BOX - h * scale) / 2;
-      content.style.transform = `scale(${scale})`;
-      content.style.left = `${left}px`;
-      content.style.top = `${top}px`;
-    });
+
+  function fitInto(frame, scaledEl) {
+    // frame is 260x260 fixed slot; scaledEl is absolutely positioned wrapper
+    const w = scaledEl.offsetWidth || 1;
+    const h = scaledEl.offsetHeight || 1;
+    let scale = Math.min((BOX - PAD * 2) / w, (BOX - PAD * 2) / h);
+    scale = Math.max(0.1, Math.min(scale, 1.2));
+    const left = (BOX - w * scale) / 2;
+    const top = (BOX - h * scale) / 2;
+    scaledEl.style.transform = `scale(${scale})`;
+    scaledEl.style.left = `${left}px`;
+    scaledEl.style.top = `${top}px`;
   }
 
-  function makeCard(html, onClose) {
+  function makeCard(rawHtml, onClose) {
     const card = document.createElement("div");
     card.className = "campaign-card";
 
     const frame = document.createElement("div");
     frame.className = "slot";
     frame.style.position = "relative";
+    frame.style.width = BOX + "px";
+    frame.style.height = BOX + "px";
+    frame.style.overflow = "hidden";
 
-    const close = document.createElement("button");
-    close.textContent = "×";
-    close.className = "card-close";
-    close.title = "Delete";
-    close.addEventListener("click", (e) => {
-      e.stopPropagation();
-      onClose();
+    // wrapper that will be scaled (keeps close button out of scaling)
+    const scaledWrap = document.createElement("div");
+    scaledWrap.style.position = "absolute";
+    scaledWrap.style.transformOrigin = "top left";
+    // אם אתה לא רוצה שיהיו לחיצות בתצוגה המוקטנת:
+    // scaledWrap.style.pointerEvents = "none";
+
+    const tmp = document.createElement("div");
+    tmp.innerHTML = rawHtml;
+    const content = tmp.firstElementChild;
+    scaledWrap.appendChild(content);
+
+    // Re-fit on images load
+    content.querySelectorAll("img").forEach((img) => {
+      img.addEventListener("load", () => fitInto(frame, scaledWrap), {
+        once: true,
+      });
     });
 
-    const wrap = document.createElement("div");
-    wrap.innerHTML = html;
-    const content = wrap.firstElementChild;
+    // Re-fit on any size change
+    const ro = new ResizeObserver(() => fitInto(frame, scaledWrap));
+    ro.observe(content);
 
-    frame.appendChild(content);
+    // Close button (not scaled)
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "×";
+    close.className = "card-close";
+    close.title = "Remove from LIVE";
+    Object.assign(close.style, {
+      position: "absolute",
+      top: "6px",
+      right: "6px",
+      width: "24px",
+      height: "24px",
+      lineHeight: "20px",
+      borderRadius: "50%",
+      background: "#111",
+      color: "#fff",
+      border: "none",
+      cursor: "pointer",
+      zIndex: 5,
+      boxShadow: "0 2px 6px rgba(0,0,0,.25)",
+    });
+    close.addEventListener("click", (e) => {
+      e.stopPropagation();
+      try {
+        onClose && onClose();
+      } finally {
+        ro.disconnect();
+      }
+    });
+
+    frame.appendChild(scaledWrap);
     frame.appendChild(close);
     card.appendChild(frame);
 
-    fitInto(frame, content);
+    // First fit
+    requestAnimationFrame(() => fitInto(frame, scaledWrap));
+    // Also refit on window resize
+    window.addEventListener("resize", () => fitInto(frame, scaledWrap), {
+      passive: true,
+    });
+
     return card;
   }
 
@@ -264,6 +304,8 @@ export function renderDashboard(username) {
     card.className = "campaign-card";
     const frame = document.createElement("div");
     frame.className = "slot placeholder-surface";
+    frame.style.width = BOX + "px";
+    frame.style.height = BOX + "px";
     card.appendChild(frame);
     return card;
   }
@@ -276,7 +318,7 @@ export function renderDashboard(username) {
     if (data && data.active && bannerCount < 3) {
       gridBanners.appendChild(
         makeCard(bannerThumbHTML(data, data.size || key), () => {
-          setBannerActive(key, false);
+          setBannerActive(key, false); // key per banner
           toast("Removed from LIVE");
           renderDashboard(username);
         })
@@ -293,11 +335,12 @@ export function renderDashboard(username) {
   const M = getMarketingPage();
   const marketingList = Array.isArray(M) ? M : M ? [M] : [];
   let emailCount = 0;
-  marketingList.forEach((m) => {
+  marketingList.forEach((m, idx) => {
     if (m && m.active && emailCount < 3) {
       gridEmails.appendChild(
         makeCard(emailThumbHTML(m), () => {
-          setMarketingActive(false);
+          // אם הפונקציה שלך מקבלת רק boolean – הפרמטר הנוסף יתעלם
+          setMarketingActive(idx, false);
           toast("Removed from LIVE");
           renderDashboard(username);
         })
@@ -314,11 +357,11 @@ export function renderDashboard(username) {
   const L = getLandingPage();
   const landingList = Array.isArray(L) ? L : L ? [L] : [];
   let landCount = 0;
-  landingList.forEach((l) => {
+  landingList.forEach((l, idx) => {
     if (l && l.active && landCount < 3) {
       gridLandings.appendChild(
         makeCard(landingThumbHTML(l), () => {
-          setLandingActive(false);
+          setLandingActive(idx, false);
           toast("Removed from LIVE");
           renderDashboard(username);
         })

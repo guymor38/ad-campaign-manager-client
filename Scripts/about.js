@@ -1,4 +1,4 @@
-// about.js — SPA page module (Guy + Adi: hero blocks + separate GitHub sections)
+// about.js — About page with two cards (Guy / Adi) + Portfolio buttons
 import { loadStyle } from "./utils.js";
 import { renderHeader } from "./header.js";
 import { renderFooter } from "./footer.js";
@@ -12,9 +12,6 @@ import {
   clearCurrentPage,
 } from "./storage.js";
 
-const GH_KEY = "githubUsername";
-const GH_KEY_PARTNER = "githubUsername_partner";
-
 function toast(msg, warn = false) {
   const t = document.createElement("div");
   t.className = "toast" + (warn ? " warn" : "");
@@ -25,33 +22,28 @@ function toast(msg, warn = false) {
 
 export function renderAbout(username) {
   loadStyle("./styles/main.css");
+  loadStyle("./styles/about.css");
 
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // Header + ניווט
   const header = renderHeader(
     username,
     (key) => {
       setCurrentPage(key);
       switch (key) {
         case "dashboard":
-          renderDashboard(username);
-          break;
+          return renderDashboard(username);
         case "banners":
-          renderBannerEditor(username);
-          break;
+          return renderBannerEditor(username);
         case "marketing":
-          renderMarketingPage(username);
-          break;
+          return renderMarketingPage(username);
         case "landing":
-          renderLandingPage(username);
-          break;
+          return renderLandingPage(username);
         case "about":
-          renderAbout(username);
-          break;
+          return renderAbout(username);
         default:
-          renderDashboard(username);
+          return renderDashboard(username);
       }
     },
     () => {
@@ -65,196 +57,82 @@ export function renderAbout(username) {
   const container = document.createElement("div");
   container.className = "page about-container";
 
-  // ===== Hero (Guy) =====
-  const hero = document.createElement("section");
-  hero.className = "about-hero";
-  hero.innerHTML = `
-    <img class="about-pic" src="./assets/img/guy.jpeg" alt="Guy portrait" />
-    <div>
-      <h1 class="about-title">About — Guy Mor</h1>
-      <p class="about-sub">
-        סטודנט להנדסאי תוכנה בשנקר, חובב JS ו‑C#. אוהב לבנות ממשקים נקיים,
-        רספונסיביים ופשוטים לתפעול. מחפש תפקידי סטודנט/ג׳וניור בצד‑לקוח/QA.
-      </p>
-      <div class="about-actions">
-        <button class="btn primary" id="scrollToProjects">צפה בחלק א׳ — פרויקטי GitHub</button>
+  // Cards data
+  const people = [
+    {
+      key: "guy",
+      name: "Guy Mor",
+      img: "./assets/img/guy.jpeg",
+      bio:
+        "something about us\n" +
+        "fdjkfkjdsfksdjgsdaksjgfasgdfkadsj gfjkdsgjadsksgdjgsdjbdbafaj,sdbf\n" +
+        "aksjbfkabsdfbasdbfakjgdkjasdbfd aksjbfj,kBA.KBFJSA.KBFDSA.KB\n" +
+        "DFBSA.DBFAFBJKDSBABFKJHG SDAFKGLAUEIGWUAIGFIRWLE GLLGQT",
+      route: "portfolio", // SPA route (Guy)
+      btn: "Portfolio",
+    },
+    {
+      key: "adi",
+      name: "Adi Marciano",
+      img: "./assets/img/adi.jpeg",
+      bio:
+        "something about us\n" +
+        "fdjkfkjdsfksdjgsdaksjgfasgdfkadsj gfjkdsgjadsksgdjgsdjbdbafaj,sdbf\n" +
+        "aksjbfkabsdfbasdbfakjgdkjasdbfd aksjbfj,kBA.KBFJSA.KBFDSA.KB\n" +
+        "DFBSA.DBFAFBJKDSBABFKJHG SDAFKGLAUEIGWUAIGFIRWLE GLLGQT",
+      route: "", // אין SPA — משתמשים בקישור חיצוני
+      externalUrl: "https://portfolioadimarciano.netlify.app/",
+      btn: "Portfolio",
+    },
+  ];
+
+  // Grid
+  const grid = document.createElement("section");
+  grid.className = "about-grid";
+  grid.innerHTML = people
+    .map(
+      (p) => `
+    <article class="about-card" data-person="${p.key}">
+      <div class="about-card__media">
+        <img src="${p.img}" alt="${p.name} portrait" loading="lazy" />
       </div>
-    </div>
-  `;
-
-  // ===== Hero (Adi) =====
-  const hero2 = document.createElement("section");
-  hero2.className = "about-hero";
-  hero2.innerHTML = `
-    <img class="about-pic" src="./assets/img/adi.jpeg" alt="Adi portrait" />
-    <div>
-      <h1 class="about-title">About — Adi</h1>
-      <p class="about-sub">
-        עדי — שותפה לפרויקט. אוהבת חוויית משתמש נקייה ועבודה מסודרת בקוד,
-        ומתעניינת בבניית ממשקים מודרניים ונגישים.
-      </p>
-      <div class="about-actions">
-        <button class="btn primary" id="scrollToPartner">צפה בחלק א׳ — פרויקטי GitHub של Adi</button>
+      <div class="about-card__body">
+        <h3 class="about-card__name">${p.name}</h3>
+        <p class="about-card__bio">${p.bio}</p>
+        <button
+          class="btn about-card__btn"
+          data-route="${p.route || ""}"
+          data-external="${p.externalUrl ? p.externalUrl : ""}">
+          ${p.btn}
+        </button>
       </div>
-    </div>
-  `;
+    </article>
+  `
+    )
+    .join("");
 
-  // ===== Projects — Guy =====
-  const me = document.createElement("section");
-  me.id = "projects";
-  me.innerHTML = `
-    <h2 class="section-title">חלק א׳ — פרויקטים שלי מ‑GitHub</h2>
-    <p class="helper">הזן שם משתמש GitHub (נשמר ל‑LocalStorage) ונטען פרויקטים דינמית.</p>
-    <div class="gh-controls">
-      <input id="ghUser" type="text" placeholder="שם משתמש GitHub (למשל: octocat)"/>
-      <button class="btn" id="saveAndLoad">שמור והטען</button>
-      <button class="btn" id="refresh">רענן</button>
-    </div>
-    <div class="repo-grid" id="repoGrid"></div>
-    <div class="helper" id="status">לא נטענו פרויקטים עדיין.</div>
-  `;
-
-  // ===== Projects — Adi =====
-  const partner = document.createElement("section");
-  partner.id = "partner-projects";
-  partner.innerHTML = `
-    <h2 class="section-title">חלק א׳ — פרויקטים של Adi מ‑GitHub</h2>
-    <p class="helper">הזן שם משתמש GitHub (נשמר ל‑LocalStorage) ונטען פרויקטים דינמית.</p>
-    <div class="gh-controls">
-      <input id="ghPartner" type="text" placeholder="שם משתמש GitHub של Adi"/>
-      <button class="btn" id="saveAndLoad2">שמור והטען</button>
-      <button class="btn" id="refresh2">רענן</button>
-    </div>
-    <div class="repo-grid" id="repoGrid2"></div>
-    <div class="helper" id="status2">לא נטענו פרויקטים עדיין.</div>
-  `;
-
-  container.append(hero, hero2, me, partner);
+  container.append(grid);
   app.append(header, container, renderFooter());
 
-  // Scroll buttons
-  hero.querySelector("#scrollToProjects").addEventListener("click", () => {
-    me.scrollIntoView({ behavior: "smooth" });
-  });
-  hero2.querySelector("#scrollToPartner").addEventListener("click", () => {
-    partner.scrollIntoView({ behavior: "smooth" });
-  });
+  // Delegated navigation
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".about-card__btn");
+    if (!btn) return;
 
-  // Shared helper: render repos into a grid
-  async function loadReposInto(username, gridEl, statusEl) {
-    gridEl.innerHTML = "";
-    statusEl.textContent = "טוען…";
-    if (!username) {
-      statusEl.textContent = "אנא הזן שם משתמש.";
+    const external = (btn.getAttribute("data-external") || "").trim();
+    if (external) {
+      // open external portfolio in a new tab
+      window.open(external, "_blank", "noopener");
       return;
     }
-    try {
-      const res = await fetch(
-        `https://api.github.com/users/${encodeURIComponent(
-          username
-        )}/repos?per_page=100&sort=updated`
+
+    const pageKey = (btn.getAttribute("data-route") || "").trim();
+    if (pageKey) {
+      setCurrentPage(pageKey);
+      window.dispatchEvent(
+        new CustomEvent("app:navigate", { detail: { page: pageKey } })
       );
-      if (!res.ok) throw new Error(`GitHub API error (${res.status})`);
-      const repos = await res.json();
-
-      const filtered = repos
-        .filter((r) => !r.fork)
-        .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0));
-
-      if (!filtered.length) {
-        statusEl.textContent = "לא נמצאו רפוזיטוריז להצגה.";
-        return;
-      }
-
-      for (const r of filtered) {
-        const card = document.createElement("article");
-        card.className = "repo-card";
-
-        const name = document.createElement("h3");
-        name.className = "repo-name";
-        name.textContent = r.name;
-
-        const desc = document.createElement("p");
-        desc.className = "repo-desc";
-        desc.textContent = r.description || "No description.";
-
-        const meta = document.createElement("div");
-        meta.className = "repo-meta";
-        const lang = r.language ? `🌐 ${r.language}` : null;
-        const stars = `⭐ ${r.stargazers_count ?? 0}`;
-        const updated = new Date(r.updated_at).toLocaleDateString();
-        meta.textContent = [lang, stars, `Updated: ${updated}`]
-          .filter(Boolean)
-          .join(" · ");
-
-        const link = document.createElement("a");
-        link.className = "repo-link";
-        link.href = r.html_url;
-        link.target = "_blank";
-        link.rel = "noopener";
-        link.textContent = "פתח ב‑GitHub →";
-
-        card.append(name, desc, meta, link);
-        gridEl.appendChild(card);
-      }
-
-      statusEl.textContent = "";
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent =
-        "שגיאה בטעינת פרויקטים מ‑GitHub. בדוק/י את שם המשתמש או נסה/י שוב.";
+      toast("Navigating…");
     }
-  }
-
-  // Guy section
-  const repoGrid = me.querySelector("#repoGrid");
-  const status = me.querySelector("#status");
-  const inp = me.querySelector("#ghUser");
-  const btnSave = me.querySelector("#saveAndLoad");
-  const btnRefresh = me.querySelector("#refresh");
-  inp.value = localStorage.getItem(GH_KEY) || "";
-
-  function doSaveAndLoad() {
-    const u = (inp.value || "").trim();
-    if (!u) {
-      status.textContent = "אנא הזן שם משתמש.";
-      return;
-    }
-    localStorage.setItem(GH_KEY, u);
-    toast("Saved");
-    loadReposInto(u, repoGrid, status);
-  }
-  btnSave.addEventListener("click", doSaveAndLoad);
-  btnRefresh.addEventListener("click", () => {
-    const u = (inp.value || "").trim() || localStorage.getItem(GH_KEY);
-    if (u) loadReposInto(u, repoGrid, status);
   });
-  const initial = localStorage.getItem(GH_KEY);
-  if (initial) loadReposInto(initial, repoGrid, status);
-
-  // Adi section
-  const repoGrid2 = partner.querySelector("#repoGrid2");
-  const status2 = partner.querySelector("#status2");
-  const inp2 = partner.querySelector("#ghPartner");
-  const btnSave2 = partner.querySelector("#saveAndLoad2");
-  const btnRefresh2 = partner.querySelector("#refresh2");
-  inp2.value = localStorage.getItem(GH_KEY_PARTNER) || "";
-
-  function doSaveAndLoad2() {
-    const u = (inp2.value || "").trim();
-    if (!u) {
-      status2.textContent = "אנא הזן שם משתמש.";
-      return;
-    }
-    localStorage.setItem(GH_KEY_PARTNER, u);
-    toast("Saved");
-    loadReposInto(u, repoGrid2, status2);
-  }
-  btnSave2.addEventListener("click", doSaveAndLoad2);
-  btnRefresh2.addEventListener("click", () => {
-    const u = (inp2.value || "").trim() || localStorage.getItem(GH_KEY_PARTNER);
-    if (u) loadReposInto(u, repoGrid2, status2);
-  });
-  const initialPartner = localStorage.getItem(GH_KEY_PARTNER);
-  if (initialPartner) loadReposInto(initialPartner, repoGrid2, status2);
 }
