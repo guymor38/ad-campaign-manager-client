@@ -4,6 +4,7 @@ import { renderDashboard } from "./dashboard.js";
 import { renderBannerEditor } from "./bannerEditor.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
+import { renderAbout } from "./about.js";
 
 initDefaultUser();
 
@@ -23,6 +24,9 @@ function renderByPage(p, u) {
       break;
     case "landing":
       renderLandingPage(u);
+      break;
+    case "about":
+      renderAbout(u);
       break;
     default:
       renderDashboard(u);

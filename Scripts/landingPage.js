@@ -5,6 +5,7 @@ import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderBannerEditor } from "./bannerEditor.js";
 import { renderFooter } from "./footer.js";
+import { renderAbout } from "./about.js";
 
 import {
   clearLoggedInUser,
@@ -42,6 +43,9 @@ export function renderLandingPage(username) {
           break;
         case "marketing":
           renderMarketingPage(username);
+          break;
+        case "about":
+          renderAbout(username);
           break;
         case "landing":
           renderLandingPage(username);

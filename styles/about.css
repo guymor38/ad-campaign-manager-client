@@ -1,0 +1,148 @@
+/* about.css */
+:root {
+  --gap: 16px;
+  --radius: 16px;
+  --muted: #4b5563;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+}
+
+/* ×¢×ž×•×“ */
+.about-container {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 16px;
+  display: grid;
+  gap: 24px;
+}
+
+/* ××–×•×¨ ×¢×œ×™×•×Ÿ: ×ª×ž×•× ×” ×¢×’×•×œ×” + ×˜×§×¡×˜ */
+.about-hero {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--gap);
+  align-items: center;
+}
+.about-hero .about-pic {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  border: 2px solid var(--card-border);
+  background: #f3f4f6;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+.about-hero .about-title {
+  font-size: 28px;
+  margin: 0 0 6px;
+  color: #80b9b1;
+}
+.about-hero .about-sub {
+  color: #ffffff;
+  opacity: 0.95;
+  margin: 0;
+  line-height: 1.55;
+}
+.about-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 4px #514864;
+  background: #ffffff;
+}
+.btn.primary {
+  background: #111827;
+  color: #fff;
+  border: 1px solid #111827;
+}
+
+/* ×›×•×ª×¨×•×ª ×ž×§×˜×¢×™× */
+.section-title {
+  font-size: 20px;
+  margin: 10px 0;
+  color: #80b9b1;
+}
+
+/* ×©×œ×™×˜×” ×¢×œ GitHub */
+.gh-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0 10px;
+}
+.gh-controls input[type="text"] {
+  flex: 1 1 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid #6e627c;
+  background: #fff;
+  color: #1c1a26;
+  outline: none;
+}
+.helper {
+  color: #e9f5f3;
+  opacity: 0.85;
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+/* ×›×¨×˜×™×¡×™ ×¨×™×¤×•×–×™×˜×•×¨×™ */
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.repo-card {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  transition: transform 0.08s ease, box-shadow 0.2s ease;
+}
+.repo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06);
+}
+.repo-name {
+  font-weight: 800;
+  margin: 0;
+}
+.repo-desc {
+  color: var(--muted);
+  font-size: 14px;
+  min-height: 40px;
+}
+.repo-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.repo-link {
+  margin-top: 4px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* ×¨×¡×¤×•× ×¡×™×‘×™×•×ª */
+@media (max-width: 720px) {
+  .about-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .about-hero .about-pic {
+    margin: 0 auto;
+  }
+}

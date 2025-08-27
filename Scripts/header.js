@@ -23,6 +23,7 @@ export function renderHeader(username, onNavigate, onLogout, activeKey) {
     { key: "banners", label: "Banners" },
     { key: "marketing", label: "Marketing" },
     { key: "landing", label: "Landing Page" },
+    { key: "about", label: "About" },
   ];
 
   links.forEach(({ key, label }) => {

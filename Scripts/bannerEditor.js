@@ -4,6 +4,7 @@ import { renderDashboard } from "./dashboard.js";
 import { renderLogin } from "./login.js";
 import { renderMarketingPage } from "./marketing.js";
 import { renderLandingPage } from "./landingPage.js";
+import { renderAbout } from "./about.js";
 import { renderFooter } from "./footer.js";
 import {
   clearLoggedInUser,
@@ -42,6 +43,9 @@ export function renderBannerEditor(username) {
           break;
         case "marketing":
           renderMarketingPage(username);
+          break;
+        case "about":
+          renderAbout(username);
           break;
         case "landing":
           renderLandingPage(username);
